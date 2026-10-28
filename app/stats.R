@@ -51,12 +51,14 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  pdf<-if(isF)function(x)df(x,df,df2) else if(ischi)function(x)dchisq(x,df) else if(method=='t')function(x)dt(x,df) else dnorm
  hi<-if(isF)max(qf(.999,df,df2),stat*1.15,critical*1.6) else if(ischi)max(critical*1.6,stat*1.15,df+5*sqrt(2*df),6) else max(4.2,abs(stat)+.8,critical+.8);lo<-if(positive)0 else -hi
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
- extreme<-if(pview){if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat}else{if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical}
- col<-if(pview)'#169ac2' else '#d48226';label<-if(isF)'F 檢定量（F-statistic）' else if(ischi)'χ² 檢定量（chi-square statistic）' else paste0(method,' 檢定量（',method,'-statistic）')
+ rejection<-if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical
+ extreme<-if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat
+ label<-if(isF)'F' else if(ischi)'χ²' else method
  peak_x<-max(125,min(435,X(xx[which.max(density)])))
  out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 355" role="img" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="355" fill="white"/>',svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
- run<-rle(extreme);end<-cumsum(run$lengths);start<-end-run$lengths+1
- for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s" fill-opacity=".3"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),col))}
+ out<-c(out,'<defs><pattern id="alpha-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6L6 0" stroke="#cb7017" stroke-width="1.5"/></pattern></defs>')
+ for(layer in 1:2){mask<-if(layer==1)extreme else rejection;run<-rle(mask);end<-cumsum(run$lengths);start<-end-run$lengths+1
+ for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s" fill-opacity="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#169ac2' else 'url(#alpha-hatch)',if(layer==1)'.35' else '.9'))}}
  out<-c(out,sprintf('<polyline points="%s" fill="none" stroke="#344b58" stroke-width="2"/><path d="M56 232 H510" stroke="#344b58"/>',paste(sprintf('%.2f,%.2f',X(xx),Y(density)),collapse=' ')))
  for(tick in pretty(c(lo,hi),n=6))if(tick>=lo&&tick<=hi)out<-c(out,sprintf('<path d="M%.2f 232 V237" stroke="#344b58"/>',X(tick)),svg_text(X(tick),254,format(tick,trim=TRUE),'#526b76',11))
  cvs<-if(tail=='two')c(-critical,critical) else if(tail=='left')-critical else critical
@@ -66,10 +68,24 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  cv_label<-paste0(cv_name,' = ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical),'；α = ',alpha)
  obs_label<-paste0(if(ischi)'χ²' else paste0(method,'_obt'),' = ',fmt(stat),', p = ',p_fmt(p))
  obs_x<-max(135,min(425,X(stat)))
- out<-c(out,sprintf('<path d="M%.2f 80 V232 M%.2f 290 V299" stroke="#7c3aed" stroke-width="2.3"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#7c3aed',13),svg_text(280,343,label,size=12),'</svg>');paste(out,collapse='')
+ out<-c(out,sprintf('<path d="M%.2f 80 V232 M%.2f 290 V299" stroke="#7c3aed" stroke-width="2.3"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#7c3aed',13),svg_text(524,237,label,size=14),svg_text(280,343,'橘色斜線：α 拒絕域　藍色面積：p-value',size=11),'</svg>');paste(out,collapse='')
 }
 html_table <- function(a,reject=NULL) {
  heads<-paste0('<th>',esc(names(a)),'</th>',collapse='');rows<-vapply(seq_len(nrow(a)),function(i)paste0('<tr',if(!is.null(reject)&&reject[i])' class="reject"' else '', '>',paste0('<td>',esc(unlist(a[i,],use.names=FALSE)),'</td>',collapse=''),'</tr>'),character(1))
  paste0('<div class="table-scroll"><table><thead><tr>',heads,'</tr></thead><tbody>',paste(rows,collapse=''),'</tbody></table></div>')
+}
+
+# A pure estimation example has no null hypothesis or p-value until one is supplied.
+single_ci_svg <- function(r,alpha,unit='原始單位') {
+ half<-r$ci_critical*r$se;rg<-c(r$lower-half*.5,r$upper+half*.5)
+ X<-function(x)95+670*(x-rg[1])/diff(rg)
+ out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 270" role="img" aria-label="雙側信賴區間估計圖" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="860" height="270" fill="white"/>',
+  svg_text(430,30,paste0(fmt((1-alpha)*100,1),'% ',r$method,' 信賴區間'),size=17),
+  sprintf('<path d="M%.2f 112 H%.2f M%.2f 104 V120 M%.2f 104 V120" stroke="#2563eb" stroke-width="3"/><circle cx="%.2f" cy="112" r="5" fill="#2563eb"/>',X(r$lower),X(r$upper),X(r$lower),X(r$upper),X(r$mean)),
+  svg_text(X(r$lower)-9,116,fmt(r$lower,4),'#2563eb',13,'end'),svg_text(X(r$upper)+9,116,fmt(r$upper,4),'#2563eb',13,'start'),
+  svg_text(X(r$mean),84,paste0('x̄ = ',fmt(r$mean,3)),'#183d47',15),'<path d="M95 170 H765" stroke="#526b76"/>')
+ for(v in pretty(rg,n=6))if(v>=rg[1]&&v<=rg[2])out<-c(out,sprintf('<path d="M%.2f 170 V176" stroke="#526b76"/>',X(v)),svg_text(X(v),197,format(v,trim=TRUE),size=12))
+ out<-c(out,svg_text(430,223,paste0('原始數值（',unit,'）'),size=13),svg_text(430,250,paste0('SE = ',fmt(r$se,4),'；',r$method,'cv = ',fmt(r$ci_critical,4),'；誤差界限 = ',fmt(half,4)),'#536c76',12),'</svg>')
+ paste(out,collapse='')
 }
 

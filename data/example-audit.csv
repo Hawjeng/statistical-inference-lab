@@ -1,0 +1,15 @@
+﻿example,file,sha256,kind,n,mean,sample_sd,known_sigma,null_mu_in_original,estimation_only
+投手球速：已知母體標準差,Ch08p179pitcher.xlsx,b3758e83d8c0bea20004f0aa048fed8c8ecd4e221a49956956eabc0b40a40be6,mean,30,115,8.99808408725876,10,,True
+投手球速：未知母體標準差,Ch08p183pitcher.xlsx,7ff3b2287a732f14b1ca6def1a890dd696258183eb661079f2db87bdbc720d23,mean,30,115,8.99808408725876,,,True
+研究生年齡：z 區間估計,Ch08p179ex8.1.xlsx,9b8129b2a95fd526a2e0489bbe6f2db5c56ef9f5b4ef8dcff6a97e6ffa42d144,mean,25,24.0,2.500010416644965,2,,True
+研究生年齡：t 區間估計,Ch08p183ex8.2.xlsx,b83bfd18dab30a6d20bb22dfffe999a8de0e9fafaa2ef26d6728c78cea7a6c4f,mean,25,24.0,2.500010416644965,,,True
+研究生年齡：z 假設檢定,Ch09p212age.xlsx,ab6aefc53542945fbb0cd6cfd9de67f727c3b61a94fa43a6f36b63d0b2ddb3af,mean,25,24.0,2.500010416644965,2,23,False
+研究生年齡：比較 z 與 t,Ch09p229age.xlsx,16eed9ebc329a4eabd71f2a13af0b5dac8d458eae0f11a0572bd0d50630780cc,mean,25,24.0,2.500010416644965,,23,False
+睡眠時間：雙尾 z 檢定,Ch09p216ex9.1.xlsx,8b6935ebcc27f354244e01cc6ad12a6d4fb65961a72cf807c209aade206cd0f4,mean,36,7.5,1.0,0.7,8,False
+睡眠時間：左尾 z 檢定,Ch09p217ex9.2.xlsx,8b1b3648a3aae3b2ac31dfc596fe5e1c3e10f5ff7544c1a3bbbf17914268b334,mean,36,7.5,1.0,0.7,8,False
+睡眠時間：雙尾 t 檢定,Ch09p221ex9.3.xlsx,7fc4c17db5514575b18582006eb5e6a56d99da677d980c664a45460ee881e4ec,mean,36,7.5,1.0,,8,False
+睡眠時間：左尾 t 檢定,Ch09p222ex9.4.xlsx,fa30cb666b789c0ccfcea890c62a12d47882182913665c560cdeba9a44dee663,mean,36,7.5,1.0,,8,False
+抽樣方法：名冊與抽樣,Ch08p165f8.1.xlsx,ec6935cc90acc49390365fc90dbf94a25ae36e26624fb55207e99789d6ffdf92,sampling,,,,,,False
+簡單隨機與系統隨機抽樣,Ch08p192EXCEL.xlsx,7460ae3b8b1e71705b90c70568e8a15d79a3debe00c88d921b305dd3b9fbcc12,sampling,,,,,,False
+比例分層抽樣：教師人數,Ch08p166t8.1.xlsx,9a37c04daf4ad29b9789a8915393e8d0777abaaf52e45acd58fd5a7cc5542b5c,stratified,,,,,,False
+單尾與雙尾：臨界值對照,Ch09p210f9.1.xlsx,54c50a1bf5b1aeac7d739214055e9d0dc12091fff4afb8c39db94004ddd6c4c7,critical,,,,,,False

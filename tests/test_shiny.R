@@ -8,6 +8,8 @@ testServer(app,{
  a<-results();stopifnot(nrow(a)==24,abs(a$p[2]-.04338376718)<1e-8)
  h<-output$survey_chart;stopifnot(grepl('μ',h$html),grepl('σ',h$html),grepl('1. 水瓶座',h$html,fixed=TRUE))
  ci0<-a[,c('lower','upper')];session$setInputs(tail='left');session$flushReact();stopifnot(identical(ci0,results()[,c('lower','upper')]))
+ stopifnot(grepl('H₀：μ ≥',output$survey_diagram$html,fixed=TRUE),grepl('z-test',output$survey_diagram$html,fixed=TRUE),grepl('t-test',output$survey_diagram$html,fixed=TRUE))
+ session$setInputs(tail='right');session$flushReact();stopifnot(grepl('H₀：μ ≤',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(scope='overall');session$flushReact();r<-anova();stopifnot(is.finite(r$p),r$df==11,r$df2>0)
  pop<-d$numeric$B5;raw<-unlist(lapply(pop$groups,function(g)g$mean+g$sd*as.numeric(scale(seq_len(g$n)))))
  group<-factor(rep(1:12,vapply(pop$groups,function(g)g$n,numeric(1))))
@@ -31,8 +33,20 @@ testServer(app,{
  stopifnot(grepl('H₀：μ = 23',output$book_diagram$html,fixed=TRUE),!grepl('事先設定的 α',output$book_diagram$html,fixed=TRUE))
  svg<-distribution_svg(-2.053860157,qt(.975,77),77,'two',.05,.043383767,'t',TRUE)
  stopifnot(grepl('t_obt = -2.054, p = 0.0434',svg,fixed=TRUE),grepl('tcv(0.025, 77)',svg,fixed=TRUE))
+ stopifnot(grepl('alpha-hatch',svg,fixed=TRUE),grepl('#169ac2',svg,fixed=TRUE),!grepl('檢定量（',svg,fixed=TRUE))
  stopifnot(grepl('stroke="#7c3aed"',svg,fixed=TRUE),grepl('fill="#7c3aed"',svg,fixed=TRUE))
  ci<-ci_svg(results(),z_names,prop=TRUE,selected=1)
  stopifnot(grepl('stroke="black"',ci,fixed=TRUE))
+ session$setInputs(example='Ch08p179pitcher',book_enable_test=FALSE,bmu=NA_real_,bsigma=10,bm='z',ba=.05,bt='two');session$flushReact()
+ r<-book_test();stopifnot(!book_testing(),all(is.na(r$stat)),all(is.na(r$p)),r$n[1]==30,r$mean[1]==115)
+ stopifnot(abs(r$sd[1]-8.99808408725876)<1e-10,
+  abs(r$lower[1]-(115-qnorm(.975)*10/sqrt(30)))<1e-10,
+  !grepl('z_obt =',output$book_result$html,fixed=TRUE),!grepl('H₀：μ',output$book_result$html,fixed=TRUE),
+  grepl('雙側信賴區間估計圖',output$book_diagram$html,fixed=TRUE),grepl('s ≈ 9',output$book_result$html,fixed=TRUE))
+ session$setInputs(example='Ch08p183pitcher',book_enable_test=FALSE,bmu=NA_real_,bm='t');session$flushReact()
+ r<-book_test();stopifnot(abs(r$lower[2]-111.64006018275217)<1e-10,abs(r$upper[2]-118.35993981724783)<1e-10)
+ session$setInputs(book_enable_test=TRUE,bmu=120);session$flushReact()
+ stopifnot(book_testing(),abs(book_test()$stat[2]-(115-120)/(8.99808408725876/sqrt(30)))<1e-10,
+  grepl('t_obt',output$book_diagram$html,fixed=TRUE))
 })
 cat('PASS Shiny reactive tests: textbook, numeric CI, tail changes, Welch, binary categories, chi-square and sampling.\n')
