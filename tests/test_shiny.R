@@ -30,6 +30,8 @@ testServer(app,{
  r<-book_test();stopifnot(abs(r$stat[1]-2.5)<1e-10,abs(r$p[1]-.012419330651552)<1e-10,
   abs(r$stat[2]-1.9999916667188)<1e-10,abs(r$p[2]-.05694080801679)<1e-10)
  stopifnot(grepl('z_obt',output$book_result$html),grepl('z_obt',output$book_diagram$html))
+ stopifnot(length(gregexpr('<svg ',output$book_diagram$html,fixed=TRUE)[[1]])==1,!grepl('t_obt',output$book_diagram$html,fixed=TRUE))
+ session$setInputs(bm='t');session$flushReact();stopifnot(grepl('t_obt',output$book_diagram$html,fixed=TRUE),!grepl('z_obt',output$book_diagram$html,fixed=TRUE));session$setInputs(bm='z');session$flushReact()
  stopifnot(grepl('H₀：μ = 23',output$book_diagram$html,fixed=TRUE),!grepl('事先設定的 α',output$book_diagram$html,fixed=TRUE))
  svg<-distribution_svg(-2.053860157,qt(.975,77),77,'two',.05,.043383767,'t',TRUE)
  stopifnot(grepl('t_obt = -2.054, p = 0.0434',svg,fixed=TRUE),grepl('tcv(0.025, 77)',svg,fixed=TRUE))

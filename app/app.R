@@ -83,7 +83,7 @@ server<-function(input,output,session) {
   }else{st<-do.call(rbind,lapply(b$strata,as.data.frame));N<-sum(st$N);n<-as.integer(input$bn);validate(need(n>=1&&n<=N,'抽樣數須為正整數且不超過母體 N'));ex<-n*st$N/N;alloc<-floor(ex);left<-n-sum(alloc);if(left>0){ix<-order(ex-alloc,decreasing=TRUE)[seq_len(left)];alloc[ix]<-alloc[ix]+1};tagList(p('母體 N = ',N,'；指定樣本數 n = ',n),HTML(html_table(data.frame(分層=st$label,母體人數=st$N,比例=fmt(st$N/N,4),未取整=fmt(ex),配置樣本數=alloc))),note('最大餘數法使配置合計恰好為 n；與原檔逐層四捨五入的總數可能略有不同。'))}
  })
  output$book_figure_title<-renderText(if(book()$type=='mean'&&!book_testing())'區間估計圖' else '檢定示意圖')
- output$book_diagram<-renderUI({b<-book();if(b$type!='mean')return(note('此範例用來示範抽樣配置或臨界值，未繪製單一樣本檢定圖。'));a<-book_test();r<-a[a$method==input$bm,];if(!book_testing())return(HTML(single_ci_svg(r,input$ba,b$unit)));comparison_ui(a,input$ba,input$bt)})
+ output$book_diagram<-renderUI({b<-book();if(b$type!='mean')return(note('此範例用來示範抽樣配置或臨界值，未繪製單一樣本檢定圖。'));a<-book_test();r<-a[a$method==input$bm,];if(!book_testing())return(HTML(single_ci_svg(r,input$ba,b$unit)));div(style='max-width:850px;margin:auto',h4(paste0(input$bm,'-test')),diagram_ui(r,input$ba,input$bt,input$bm))})
  output$book_download<-renderUI({b<-book();a(href=paste0('https://hawjeng.github.io/statistical-inference-lab/',b$file),target='_blank',class='btn btn-default','下載對應 Excel 原檔 ↓')})
  observeEvent(input$kind,{pool<-if(input$kind=='numeric')d$numeric else d$categorical;updateSelectInput(session,'variable',choices=choice_labels(pool),selected=if(input$kind=='numeric')'B5' else 'PhoneBrand')})
  category_data<-reactive({req(input$kind=='category',d$categorical[[input$variable]]);d$categorical[[input$variable]]})
