@@ -53,14 +53,19 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
  extreme<-if(pview){if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat}else{if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical}
  col<-if(pview)'#169ac2' else '#d48226';label<-if(isF)'F 檢定量（F-statistic）' else if(ischi)'χ² 檢定量（chi-square statistic）' else paste0(method,' 檢定量（',method,'-statistic）')
- out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 315" role="img" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="315" fill="white"/>',svg_text(280,27,paste0('H₀ 下的 ',if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),size=14))
+ out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 355" role="img" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="355" fill="white"/>',svg_text(280,27,paste0('H₀ 下的 ',if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),size=14))
  run<-rle(extreme);end<-cumsum(run$lengths);start<-end-run$lengths+1
  for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s" fill-opacity=".3"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),col))}
  out<-c(out,sprintf('<polyline points="%s" fill="none" stroke="#344b58" stroke-width="2"/><path d="M56 232 H510" stroke="#344b58"/>',paste(sprintf('%.2f,%.2f',X(xx),Y(density)),collapse=' ')))
  for(tick in pretty(c(lo,hi),n=6))if(tick>=lo&&tick<=hi)out<-c(out,sprintf('<path d="M%.2f 232 V237" stroke="#344b58"/>',X(tick)),svg_text(X(tick),254,format(tick,trim=TRUE),'#526b76',11))
  cvs<-if(tail=='two')c(-critical,critical) else if(tail=='left')-critical else critical
- for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)))
- out<-c(out,sprintf('<path d="M%.2f 55 V232" stroke="black" stroke-width="1.8"/>',X(stat)),svg_text(max(100,min(460,X(stat))),48,paste('觀察值',fmt(stat)),'#000',12),svg_text(280,282,if(pview)paste('p-value =',p_fmt(p)) else paste0('α = ',alpha,'；臨界值 ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical)),col,13),svg_text(280,307,label,size=12),'</svg>');paste(out,collapse='')
+ for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,fmt(cv),'#cb7017',12))
+ tailprob<-if(tail=='two')alpha/2 else alpha
+ cv_name<-if(isF)paste0('Fcv(',format(tailprob,trim=TRUE),'; ',df,', ',fmt(df2,2),')') else if(ischi)paste0('χ²cv(',format(tailprob,trim=TRUE),', ',df,')') else if(method=='t')paste0('tcv(',format(tailprob,trim=TRUE),', ',df,')') else paste0('zcv(',format(tailprob,trim=TRUE),')')
+ cv_label<-paste0(cv_name,' = ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical),'；α = ',alpha)
+ obs_label<-paste0(if(ischi)'χ²' else method,' = ',fmt(stat),', p = ',p_fmt(p))
+ obs_x<-max(135,min(425,X(stat)))
+ out<-c(out,sprintf('<path d="M%.2f 55 V232 M%.2f 290 V299" stroke="black" stroke-width="1.8"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#000',13),svg_text(280,343,label,size=12),'</svg>');paste(out,collapse='')
 }
 html_table <- function(a,reject=NULL) {
  heads<-paste0('<th>',esc(names(a)),'</th>',collapse='');rows<-vapply(seq_len(nrow(a)),function(i)paste0('<tr',if(!is.null(reject)&&reject[i])' class="reject"' else '', '>',paste0('<td>',esc(unlist(a[i,],use.names=FALSE)),'</td>',collapse=''),'</tr>'),character(1))
