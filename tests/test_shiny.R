@@ -22,5 +22,13 @@ testServer(app,{
  session$setInputs(category_method='proportion',event='1');session$flushReact();stopifnot(nrow(results())==12)
  session$setInputs(example='Ch08p166t8.1',bn=1000);session$flushReact();stopifnot(grepl('配置樣本數',output$book_result$html))
  session$setInputs(example='Ch09p210f9.1');session$flushReact();stopifnot(grepl('1.9600',output$book_result$html,fixed=TRUE))
+ age_items<-Filter(function(a)grepl('研究生年齡',a$title),examples)
+ stopifnot(length(age_items)==4,all(vapply(age_items,function(a)a$mu==23,logical(1))))
+ session$setInputs(example='Ch09p229age',bmu=23,bsigma=2,bm='z',bt='two');session$flushReact()
+ r<-book_test();stopifnot(abs(r$stat[1]-2.5)<1e-10,abs(r$p[1]-.012419330651552)<1e-10,
+  abs(r$stat[2]-1.9999916667188)<1e-10,abs(r$p[2]-.05694080801679)<1e-10)
+ stopifnot(grepl('z_obt',output$book_result$html),grepl('z_obt',output$book_diagram$html))
+ svg<-distribution_svg(-2.053860157,qt(.975,77),77,'two',.05,.043383767,'t',TRUE)
+ stopifnot(grepl('t_obt = -2.054, p = 0.0434',svg,fixed=TRUE),grepl('tcv(0.025, 77)',svg,fixed=TRUE))
 })
 cat('PASS Shiny reactive tests: textbook, numeric CI, tail changes, Welch, binary categories, chi-square and sampling.\n')
