@@ -1,0 +1,9 @@
+Rplots.pdf
+confidence-intervals.png
+numeric-results.csv
+test-reference.json
+test-reference.csv
+node_modules/
+site/
+*.log
+.DS_Store

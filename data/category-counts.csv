@@ -1,0 +1,349 @@
+﻿variable,label,z,category,count
+Gender,性別,1,女,51
+Gender,性別,1,男,27
+Gender,性別,2,女,18
+Gender,性別,2,男,20
+Gender,性別,3,女,35
+Gender,性別,3,男,13
+Gender,性別,4,女,28
+Gender,性別,4,男,26
+Gender,性別,5,女,40
+Gender,性別,5,男,23
+Gender,性別,6,女,37
+Gender,性別,6,男,28
+Gender,性別,7,女,39
+Gender,性別,7,男,21
+Gender,性別,8,女,36
+Gender,性別,8,男,28
+Gender,性別,9,女,61
+Gender,性別,9,男,16
+Gender,性別,10,女,34
+Gender,性別,10,男,20
+Gender,性別,11,女,42
+Gender,性別,11,男,30
+Gender,性別,12,女,27
+Gender,性別,12,男,13
+College,學院,1,0我不是台師大學生 Not NTNU student,30
+College,學院,1,1台師大管理學院College of Management of NTNU,15
+College,學院,1,2台師大教育學院College of Education of NTNU,6
+College,學院,1,3台師大理學院College of Science of NTNU,0
+College,學院,1,4台師大文學院College of Liberal Arts of NTNU,4
+College,學院,1,5台師大科技工程學院College of Technology & Engineering,8
+College,學院,1,6台師大藝術學院College of Arts of NTNU,1
+College,學院,1,7台師大運動與休閒學院College of Sports and Recreation,0
+College,學院,1,8台師大音樂學院College of Music of NTNU,2
+College,學院,1,9台師大國際與社科學院College of International Studies and Social Sciences,6
+College,學院,1,其它,6
+College,學院,2,0我不是台師大學生 Not NTNU student,15
+College,學院,2,1台師大管理學院College of Management of NTNU,2
+College,學院,2,2台師大教育學院College of Education of NTNU,3
+College,學院,2,3台師大理學院College of Science of NTNU,2
+College,學院,2,4台師大文學院College of Liberal Arts of NTNU,3
+College,學院,2,5台師大科技工程學院College of Technology & Engineering,4
+College,學院,2,6台師大藝術學院College of Arts of NTNU,0
+College,學院,2,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,2,8台師大音樂學院College of Music of NTNU,1
+College,學院,2,9台師大國際與社科學院College of International Studies and Social Sciences,1
+College,學院,2,其它,6
+College,學院,3,0我不是台師大學生 Not NTNU student,16
+College,學院,3,1台師大管理學院College of Management of NTNU,5
+College,學院,3,2台師大教育學院College of Education of NTNU,6
+College,學院,3,3台師大理學院College of Science of NTNU,1
+College,學院,3,4台師大文學院College of Liberal Arts of NTNU,8
+College,學院,3,5台師大科技工程學院College of Technology & Engineering,4
+College,學院,3,6台師大藝術學院College of Arts of NTNU,0
+College,學院,3,7台師大運動與休閒學院College of Sports and Recreation,0
+College,學院,3,8台師大音樂學院College of Music of NTNU,3
+College,學院,3,9台師大國際與社科學院College of International Studies and Social Sciences,2
+College,學院,3,其它,3
+College,學院,4,0我不是台師大學生 Not NTNU student,17
+College,學院,4,1台師大管理學院College of Management of NTNU,14
+College,學院,4,2台師大教育學院College of Education of NTNU,7
+College,學院,4,3台師大理學院College of Science of NTNU,2
+College,學院,4,4台師大文學院College of Liberal Arts of NTNU,1
+College,學院,4,5台師大科技工程學院College of Technology & Engineering,0
+College,學院,4,6台師大藝術學院College of Arts of NTNU,1
+College,學院,4,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,4,8台師大音樂學院College of Music of NTNU,3
+College,學院,4,9台師大國際與社科學院College of International Studies and Social Sciences,4
+College,學院,4,其它,4
+College,學院,5,0我不是台師大學生 Not NTNU student,19
+College,學院,5,1台師大管理學院College of Management of NTNU,13
+College,學院,5,2台師大教育學院College of Education of NTNU,9
+College,學院,5,3台師大理學院College of Science of NTNU,4
+College,學院,5,4台師大文學院College of Liberal Arts of NTNU,4
+College,學院,5,5台師大科技工程學院College of Technology & Engineering,4
+College,學院,5,6台師大藝術學院College of Arts of NTNU,0
+College,學院,5,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,5,8台師大音樂學院College of Music of NTNU,1
+College,學院,5,9台師大國際與社科學院College of International Studies and Social Sciences,3
+College,學院,5,其它,5
+College,學院,6,0我不是台師大學生 Not NTNU student,25
+College,學院,6,1台師大管理學院College of Management of NTNU,4
+College,學院,6,2台師大教育學院College of Education of NTNU,8
+College,學院,6,3台師大理學院College of Science of NTNU,1
+College,學院,6,4台師大文學院College of Liberal Arts of NTNU,5
+College,學院,6,5台師大科技工程學院College of Technology & Engineering,10
+College,學院,6,6台師大藝術學院College of Arts of NTNU,1
+College,學院,6,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,6,8台師大音樂學院College of Music of NTNU,2
+College,學院,6,9台師大國際與社科學院College of International Studies and Social Sciences,1
+College,學院,6,其它,7
+College,學院,7,0我不是台師大學生 Not NTNU student,11
+College,學院,7,1台師大管理學院College of Management of NTNU,12
+College,學院,7,2台師大教育學院College of Education of NTNU,6
+College,學院,7,3台師大理學院College of Science of NTNU,4
+College,學院,7,4台師大文學院College of Liberal Arts of NTNU,9
+College,學院,7,5台師大科技工程學院College of Technology & Engineering,8
+College,學院,7,6台師大藝術學院College of Arts of NTNU,2
+College,學院,7,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,7,8台師大音樂學院College of Music of NTNU,0
+College,學院,7,9台師大國際與社科學院College of International Studies and Social Sciences,2
+College,學院,7,其它,5
+College,學院,8,0我不是台師大學生 Not NTNU student,21
+College,學院,8,1台師大管理學院College of Management of NTNU,11
+College,學院,8,2台師大教育學院College of Education of NTNU,5
+College,學院,8,3台師大理學院College of Science of NTNU,4
+College,學院,8,4台師大文學院College of Liberal Arts of NTNU,7
+College,學院,8,5台師大科技工程學院College of Technology & Engineering,6
+College,學院,8,6台師大藝術學院College of Arts of NTNU,1
+College,學院,8,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,8,8台師大音樂學院College of Music of NTNU,1
+College,學院,8,9台師大國際與社科學院College of International Studies and Social Sciences,5
+College,學院,8,其它,2
+College,學院,9,0我不是台師大學生 Not NTNU student,27
+College,學院,9,1台師大管理學院College of Management of NTNU,15
+College,學院,9,2台師大教育學院College of Education of NTNU,14
+College,學院,9,3台師大理學院College of Science of NTNU,1
+College,學院,9,4台師大文學院College of Liberal Arts of NTNU,4
+College,學院,9,5台師大科技工程學院College of Technology & Engineering,5
+College,學院,9,6台師大藝術學院College of Arts of NTNU,1
+College,學院,9,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,9,8台師大音樂學院College of Music of NTNU,0
+College,學院,9,9台師大國際與社科學院College of International Studies and Social Sciences,3
+College,學院,9,其它,6
+College,學院,10,0我不是台師大學生 Not NTNU student,9
+College,學院,10,1台師大管理學院College of Management of NTNU,9
+College,學院,10,2台師大教育學院College of Education of NTNU,7
+College,學院,10,3台師大理學院College of Science of NTNU,2
+College,學院,10,4台師大文學院College of Liberal Arts of NTNU,6
+College,學院,10,5台師大科技工程學院College of Technology & Engineering,2
+College,學院,10,6台師大藝術學院College of Arts of NTNU,0
+College,學院,10,7台師大運動與休閒學院College of Sports and Recreation,2
+College,學院,10,8台師大音樂學院College of Music of NTNU,0
+College,學院,10,9台師大國際與社科學院College of International Studies and Social Sciences,11
+College,學院,10,其它,6
+College,學院,11,0我不是台師大學生 Not NTNU student,24
+College,學院,11,1台師大管理學院College of Management of NTNU,5
+College,學院,11,2台師大教育學院College of Education of NTNU,11
+College,學院,11,3台師大理學院College of Science of NTNU,3
+College,學院,11,4台師大文學院College of Liberal Arts of NTNU,6
+College,學院,11,5台師大科技工程學院College of Technology & Engineering,6
+College,學院,11,6台師大藝術學院College of Arts of NTNU,0
+College,學院,11,7台師大運動與休閒學院College of Sports and Recreation,3
+College,學院,11,8台師大音樂學院College of Music of NTNU,1
+College,學院,11,9台師大國際與社科學院College of International Studies and Social Sciences,7
+College,學院,11,其它,6
+College,學院,12,0我不是台師大學生 Not NTNU student,10
+College,學院,12,1台師大管理學院College of Management of NTNU,4
+College,學院,12,2台師大教育學院College of Education of NTNU,9
+College,學院,12,3台師大理學院College of Science of NTNU,4
+College,學院,12,4台師大文學院College of Liberal Arts of NTNU,4
+College,學院,12,5台師大科技工程學院College of Technology & Engineering,3
+College,學院,12,6台師大藝術學院College of Arts of NTNU,1
+College,學院,12,7台師大運動與休閒學院College of Sports and Recreation,1
+College,學院,12,8台師大音樂學院College of Music of NTNU,0
+College,學院,12,9台師大國際與社科學院College of International Studies and Social Sciences,1
+College,學院,12,其它,3
+Personality,個性類型,1,1. 內向安靜 Introvert and gentle,18
+Personality,個性類型,1,2. 中性平衡 Balance and equal,26
+Personality,個性類型,1,3. 外向活潑 Outward and active,14
+Personality,個性類型,1,4. 內外雙極 In-outward polarized,9
+Personality,個性類型,1,5. 難以捉摸 Hart to say and unstable,10
+Personality,個性類型,1,A,1
+Personality,個性類型,1,其它,0
+Personality,個性類型,2,1. 內向安靜 Introvert and gentle,8
+Personality,個性類型,2,2. 中性平衡 Balance and equal,16
+Personality,個性類型,2,3. 外向活潑 Outward and active,6
+Personality,個性類型,2,4. 內外雙極 In-outward polarized,5
+Personality,個性類型,2,5. 難以捉摸 Hart to say and unstable,3
+Personality,個性類型,2,A,0
+Personality,個性類型,2,其它,0
+Personality,個性類型,3,1. 內向安靜 Introvert and gentle,5
+Personality,個性類型,3,2. 中性平衡 Balance and equal,23
+Personality,個性類型,3,3. 外向活潑 Outward and active,10
+Personality,個性類型,3,4. 內外雙極 In-outward polarized,4
+Personality,個性類型,3,5. 難以捉摸 Hart to say and unstable,6
+Personality,個性類型,3,A,0
+Personality,個性類型,3,其它,0
+Personality,個性類型,4,1. 內向安靜 Introvert and gentle,8
+Personality,個性類型,4,2. 中性平衡 Balance and equal,21
+Personality,個性類型,4,3. 外向活潑 Outward and active,16
+Personality,個性類型,4,4. 內外雙極 In-outward polarized,6
+Personality,個性類型,4,5. 難以捉摸 Hart to say and unstable,3
+Personality,個性類型,4,A,0
+Personality,個性類型,4,其它,0
+Personality,個性類型,5,1. 內向安靜 Introvert and gentle,12
+Personality,個性類型,5,2. 中性平衡 Balance and equal,15
+Personality,個性類型,5,3. 外向活潑 Outward and active,11
+Personality,個性類型,5,4. 內外雙極 In-outward polarized,11
+Personality,個性類型,5,5. 難以捉摸 Hart to say and unstable,14
+Personality,個性類型,5,A,0
+Personality,個性類型,5,其它,0
+Personality,個性類型,6,1. 內向安靜 Introvert and gentle,18
+Personality,個性類型,6,2. 中性平衡 Balance and equal,21
+Personality,個性類型,6,3. 外向活潑 Outward and active,15
+Personality,個性類型,6,4. 內外雙極 In-outward polarized,6
+Personality,個性類型,6,5. 難以捉摸 Hart to say and unstable,5
+Personality,個性類型,6,A,0
+Personality,個性類型,6,其它,0
+Personality,個性類型,7,1. 內向安靜 Introvert and gentle,5
+Personality,個性類型,7,2. 中性平衡 Balance and equal,27
+Personality,個性類型,7,3. 外向活潑 Outward and active,14
+Personality,個性類型,7,4. 內外雙極 In-outward polarized,9
+Personality,個性類型,7,5. 難以捉摸 Hart to say and unstable,5
+Personality,個性類型,7,A,0
+Personality,個性類型,7,其它,0
+Personality,個性類型,8,1. 內向安靜 Introvert and gentle,17
+Personality,個性類型,8,2. 中性平衡 Balance and equal,23
+Personality,個性類型,8,3. 外向活潑 Outward and active,7
+Personality,個性類型,8,4. 內外雙極 In-outward polarized,9
+Personality,個性類型,8,5. 難以捉摸 Hart to say and unstable,8
+Personality,個性類型,8,A,0
+Personality,個性類型,8,其它,0
+Personality,個性類型,9,1. 內向安靜 Introvert and gentle,12
+Personality,個性類型,9,2. 中性平衡 Balance and equal,29
+Personality,個性類型,9,3. 外向活潑 Outward and active,16
+Personality,個性類型,9,4. 內外雙極 In-outward polarized,10
+Personality,個性類型,9,5. 難以捉摸 Hart to say and unstable,10
+Personality,個性類型,9,A,0
+Personality,個性類型,9,其它,0
+Personality,個性類型,10,1. 內向安靜 Introvert and gentle,14
+Personality,個性類型,10,2. 中性平衡 Balance and equal,25
+Personality,個性類型,10,3. 外向活潑 Outward and active,5
+Personality,個性類型,10,4. 內外雙極 In-outward polarized,3
+Personality,個性類型,10,5. 難以捉摸 Hart to say and unstable,7
+Personality,個性類型,10,A,0
+Personality,個性類型,10,其它,0
+Personality,個性類型,11,1. 內向安靜 Introvert and gentle,11
+Personality,個性類型,11,2. 中性平衡 Balance and equal,29
+Personality,個性類型,11,3. 外向活潑 Outward and active,12
+Personality,個性類型,11,4. 內外雙極 In-outward polarized,7
+Personality,個性類型,11,5. 難以捉摸 Hart to say and unstable,13
+Personality,個性類型,11,A,0
+Personality,個性類型,11,其它,0
+Personality,個性類型,12,1. 內向安靜 Introvert and gentle,8
+Personality,個性類型,12,2. 中性平衡 Balance and equal,18
+Personality,個性類型,12,3. 外向活潑 Outward and active,8
+Personality,個性類型,12,4. 內外雙極 In-outward polarized,2
+Personality,個性類型,12,5. 難以捉摸 Hart to say and unstable,3
+Personality,個性類型,12,A,0
+Personality,個性類型,12,其它,1
+Extracurricular,課外活動參與,1,1. 從不參與  never involve,13
+Extracurricular,課外活動參與,1,2. 偶而參與 occasionally involve,46
+Extracurricular,課外活動參與,1,3. 積極參與 highly involve,19
+Extracurricular,課外活動參與,2,1. 從不參與  never involve,3
+Extracurricular,課外活動參與,2,2. 偶而參與 occasionally involve,27
+Extracurricular,課外活動參與,2,3. 積極參與 highly involve,8
+Extracurricular,課外活動參與,3,1. 從不參與  never involve,2
+Extracurricular,課外活動參與,3,2. 偶而參與 occasionally involve,34
+Extracurricular,課外活動參與,3,3. 積極參與 highly involve,12
+Extracurricular,課外活動參與,4,1. 從不參與  never involve,2
+Extracurricular,課外活動參與,4,2. 偶而參與 occasionally involve,36
+Extracurricular,課外活動參與,4,3. 積極參與 highly involve,16
+Extracurricular,課外活動參與,5,1. 從不參與  never involve,4
+Extracurricular,課外活動參與,5,2. 偶而參與 occasionally involve,48
+Extracurricular,課外活動參與,5,3. 積極參與 highly involve,11
+Extracurricular,課外活動參與,6,1. 從不參與  never involve,8
+Extracurricular,課外活動參與,6,2. 偶而參與 occasionally involve,34
+Extracurricular,課外活動參與,6,3. 積極參與 highly involve,23
+Extracurricular,課外活動參與,7,1. 從不參與  never involve,3
+Extracurricular,課外活動參與,7,2. 偶而參與 occasionally involve,35
+Extracurricular,課外活動參與,7,3. 積極參與 highly involve,22
+Extracurricular,課外活動參與,8,1. 從不參與  never involve,9
+Extracurricular,課外活動參與,8,2. 偶而參與 occasionally involve,44
+Extracurricular,課外活動參與,8,3. 積極參與 highly involve,11
+Extracurricular,課外活動參與,9,1. 從不參與  never involve,8
+Extracurricular,課外活動參與,9,2. 偶而參與 occasionally involve,47
+Extracurricular,課外活動參與,9,3. 積極參與 highly involve,22
+Extracurricular,課外活動參與,10,1. 從不參與  never involve,5
+Extracurricular,課外活動參與,10,2. 偶而參與 occasionally involve,38
+Extracurricular,課外活動參與,10,3. 積極參與 highly involve,11
+Extracurricular,課外活動參與,11,1. 從不參與  never involve,12
+Extracurricular,課外活動參與,11,2. 偶而參與 occasionally involve,43
+Extracurricular,課外活動參與,11,3. 積極參與 highly involve,17
+Extracurricular,課外活動參與,12,1. 從不參與  never involve,2
+Extracurricular,課外活動參與,12,2. 偶而參與 occasionally involve,29
+Extracurricular,課外活動參與,12,3. 積極參與 highly involve,9
+PhoneBrand,是否為 iPhone,1,iPhone,64
+PhoneBrand,是否為 iPhone,1,非 iPhone,14
+PhoneBrand,是否為 iPhone,2,iPhone,26
+PhoneBrand,是否為 iPhone,2,非 iPhone,12
+PhoneBrand,是否為 iPhone,3,iPhone,37
+PhoneBrand,是否為 iPhone,3,非 iPhone,10
+PhoneBrand,是否為 iPhone,4,iPhone,38
+PhoneBrand,是否為 iPhone,4,非 iPhone,16
+PhoneBrand,是否為 iPhone,5,iPhone,50
+PhoneBrand,是否為 iPhone,5,非 iPhone,12
+PhoneBrand,是否為 iPhone,6,iPhone,46
+PhoneBrand,是否為 iPhone,6,非 iPhone,18
+PhoneBrand,是否為 iPhone,7,iPhone,38
+PhoneBrand,是否為 iPhone,7,非 iPhone,21
+PhoneBrand,是否為 iPhone,8,iPhone,50
+PhoneBrand,是否為 iPhone,8,非 iPhone,14
+PhoneBrand,是否為 iPhone,9,iPhone,64
+PhoneBrand,是否為 iPhone,9,非 iPhone,13
+PhoneBrand,是否為 iPhone,10,iPhone,42
+PhoneBrand,是否為 iPhone,10,非 iPhone,12
+PhoneBrand,是否為 iPhone,11,iPhone,55
+PhoneBrand,是否為 iPhone,11,非 iPhone,14
+PhoneBrand,是否為 iPhone,12,iPhone,32
+PhoneBrand,是否為 iPhone,12,非 iPhone,8
+DataPlan,是否為吃到飽,1,吃到飽,64
+DataPlan,是否為吃到飽,1,非吃到飽,14
+DataPlan,是否為吃到飽,2,吃到飽,34
+DataPlan,是否為吃到飽,2,非吃到飽,4
+DataPlan,是否為吃到飽,3,吃到飽,40
+DataPlan,是否為吃到飽,3,非吃到飽,8
+DataPlan,是否為吃到飽,4,吃到飽,41
+DataPlan,是否為吃到飽,4,非吃到飽,13
+DataPlan,是否為吃到飽,5,吃到飽,39
+DataPlan,是否為吃到飽,5,非吃到飽,24
+DataPlan,是否為吃到飽,6,吃到飽,48
+DataPlan,是否為吃到飽,6,非吃到飽,17
+DataPlan,是否為吃到飽,7,吃到飽,43
+DataPlan,是否為吃到飽,7,非吃到飽,16
+DataPlan,是否為吃到飽,8,吃到飽,49
+DataPlan,是否為吃到飽,8,非吃到飽,15
+DataPlan,是否為吃到飽,9,吃到飽,62
+DataPlan,是否為吃到飽,9,非吃到飽,15
+DataPlan,是否為吃到飽,10,吃到飽,42
+DataPlan,是否為吃到飽,10,非吃到飽,11
+DataPlan,是否為吃到飽,11,吃到飽,51
+DataPlan,是否為吃到飽,11,非吃到飽,20
+DataPlan,是否為吃到飽,12,吃到飽,28
+DataPlan,是否為吃到飽,12,非吃到飽,12
+Sex,性別代碼,1,0,51
+Sex,性別代碼,1,1,27
+Sex,性別代碼,2,0,18
+Sex,性別代碼,2,1,20
+Sex,性別代碼,3,0,35
+Sex,性別代碼,3,1,13
+Sex,性別代碼,4,0,28
+Sex,性別代碼,4,1,26
+Sex,性別代碼,5,0,40
+Sex,性別代碼,5,1,23
+Sex,性別代碼,6,0,37
+Sex,性別代碼,6,1,28
+Sex,性別代碼,7,0,39
+Sex,性別代碼,7,1,21
+Sex,性別代碼,8,0,36
+Sex,性別代碼,8,1,28
+Sex,性別代碼,9,0,61
+Sex,性別代碼,9,1,16
+Sex,性別代碼,10,0,34
+Sex,性別代碼,10,1,20
+Sex,性別代碼,11,0,42
+Sex,性別代碼,11,1,30
+Sex,性別代碼,12,0,27
+Sex,性別代碼,12,1,13
