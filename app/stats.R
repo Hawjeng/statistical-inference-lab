@@ -65,9 +65,10 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  cv_label<-paste0(cv_name,' = ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical),'；α = ',alpha)
  obs_label<-paste0(if(ischi)'χ²' else method,' = ',fmt(stat),', p = ',p_fmt(p))
  obs_x<-max(135,min(425,X(stat)))
- out<-c(out,sprintf('<path d="M%.2f 55 V232 M%.2f 290 V299" stroke="black" stroke-width="1.8"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#000',13),svg_text(280,343,label,size=12),'</svg>');paste(out,collapse='')
+ out<-c(out,sprintf('<path d="M%.2f 80 V232 M%.2f 290 V299" stroke="black" stroke-width="1.8"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#000',13),svg_text(280,343,label,size=12),'</svg>');paste(out,collapse='')
 }
 html_table <- function(a,reject=NULL) {
  heads<-paste0('<th>',esc(names(a)),'</th>',collapse='');rows<-vapply(seq_len(nrow(a)),function(i)paste0('<tr',if(!is.null(reject)&&reject[i])' class="reject"' else '', '>',paste0('<td>',esc(unlist(a[i,],use.names=FALSE)),'</td>',collapse=''),'</tr>'),character(1))
  paste0('<div class="table-scroll"><table><thead><tr>',heads,'</tr></thead><tbody>',paste(rows,collapse=''),'</tbody></table></div>')
 }
+
