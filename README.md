@@ -28,6 +28,7 @@
 - 端點數值放在區間外側；平均值只顯示數字；CI 未涵蓋參考值標紅。
 - 拒絕域與 p-value 分別繪圖。檢定圖橫軸明確寫出 z-statistic、t-statistic、F-statistic 或 chi-square statistic。
 - 觀察值記為 z_obt／t_obt，與 zcv／tcv 臨界值區分；觀察值與 p-value 成對標在觀察線下方。
+- 觀察檢定量的線、定位短線與數值採紫色；臨界值採橘色虛線。CI 圖的 μ 參考線維持黑色實線。
 
 ## 資料處理
 

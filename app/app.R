@@ -47,7 +47,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
    uiOutput('population'),uiOutput('scope_note')),
   fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),conditionalPanel("input.kind == 'numeric' || (input.scope == 'single' && input.category_method == 'proportion')",downloadButton('save_chart','下載圖形 SVG')))),
    column(4,card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。'),conditionalPanel("input.kind == 'category' && (input.scope == 'overall' || input.category_method == 'gof')",actionButton('mc','Monte Carlo 模擬（5,000 次）',class='btn-primary'),uiOutput('mc_result'))))),
-  card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。黑線：觀察統計量；橘色虛線：臨界值。')),
+  card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。')),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),downloadButton('save_csv','下載目前結果 CSV'))),
  tabPanel('教材下載與說明',card(h3('語法、資料與教材'),p('完整 Shiny 原始碼與資料放在 GitHub，新專案可下載後在 RStudio 執行。'),
   a(class='btn btn-primary',href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','查看 GitHub 原始碼'),br(),br(),

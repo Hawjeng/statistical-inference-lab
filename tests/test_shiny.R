@@ -30,5 +30,8 @@ testServer(app,{
  stopifnot(grepl('z_obt',output$book_result$html),grepl('z_obt',output$book_diagram$html))
  svg<-distribution_svg(-2.053860157,qt(.975,77),77,'two',.05,.043383767,'t',TRUE)
  stopifnot(grepl('t_obt = -2.054, p = 0.0434',svg,fixed=TRUE),grepl('tcv(0.025, 77)',svg,fixed=TRUE))
+ stopifnot(grepl('stroke="#7c3aed"',svg,fixed=TRUE),grepl('fill="#7c3aed"',svg,fixed=TRUE))
+ ci<-ci_svg(results(),z_names,prop=TRUE,selected=1)
+ stopifnot(grepl('stroke="black"',ci,fixed=TRUE))
 })
 cat('PASS Shiny reactive tests: textbook, numeric CI, tail changes, Welch, binary categories, chi-square and sampling.\n')
