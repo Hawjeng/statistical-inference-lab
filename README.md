@@ -29,6 +29,7 @@
 - 拒絕域與 p-value 分別繪圖。檢定圖橫軸明確寫出 z-statistic、t-statistic、F-statistic 或 chi-square statistic。
 - 觀察值記為 z_obt／t_obt，與 zcv／tcv 臨界值區分；觀察值與 p-value 成對標在觀察線下方。
 - 觀察檢定量的線、定位短線與數值採紫色；臨界值採橘色虛線。CI 圖的 μ 參考線維持黑色實線。
+- 曲線峰頂上方標示目前的 H₀（例如 H₀：μ=23）；單尾檢定依 H₀ 邊界參數繪製參考分配。
 
 ## 資料處理
 

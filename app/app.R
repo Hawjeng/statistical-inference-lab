@@ -11,10 +11,11 @@ selectInput<-function(...)shiny::selectInput(...,selectize=FALSE)
 tails<-c('雙尾 ≠'='two','左尾 <'='left','右尾 >'='right')
 card<-function(...,class='')div(class=paste('lab-card',class),...)
 note<-function(...)p(class='hint',...)
-diagram_ui<-function(r,alpha,tail,method,df2=NULL) {
+diagram_ui<-function(r,alpha,tail,method,df2=NULL,h0=NULL) {
  cv<-if(method=='chi')qchisq(1-alpha,r$df) else if(method=='F')qf(1-alpha,r$df,df2) else r$critical
- fluidRow(column(6,h4('拒絕域：事先設定的 α'),HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,FALSE,df2))),
-  column(6,h4('尾端機率：資料得到的 p-value'),HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,TRUE,df2))))
+ if(is.null(h0))h0<-if(method=='F')'H₀：μ₁ = ⋯ = μ₁₂' else if(method=='chi')if(r$mode=='independence')'H₀：星座與類別獨立' else 'H₀：類別比例符合全體' else paste0('H₀：μ = ',format(round(r$mu,4),trim=TRUE,scientific=FALSE))
+ fluidRow(column(6,HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,FALSE,df2,h0)),note('橘色陰影：拒絕域。')),
+  column(6,HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,TRUE,df2,h0)),note('藍色陰影：p-value 尾端機率。')))
 }
 hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H₀：',param,if(tail=='two')' = ' else if(tail=='left')' ≥ ' else ' ≤ ',fmt(mu,4),'<br>H₁：',param,if(tail=='two')' ≠ ' else if(tail=='left')' &lt; ' else ' &gt; ',fmt(mu,4),'</div>'))
 result_table<-function(a) {
@@ -99,7 +100,7 @@ server<-function(input,output,session) {
   }else if(is_chi()){r<-chi();tagList(h4('Pearson χ² 檢定'),p(if(input$scope=='overall')'H₀：星座與此類別變數獨立；H₁：存在關聯。' else 'H₀：所選星座的分布符合全體比例；H₁：至少一類比例不同。'),p('χ² = ',fmt(r$stat,4),'；df = ',r$df,'；近似 p = ',p_fmt(r$p)),div(class=if(r$p<al)'decision reject' else 'decision',if(r$p<al)'拒絕 H₀' else '保留 H₀'),p(class=if(r$tiny>0||r$small/r$cells>.2)'warning' else 'hint',paste0('E < 5：',r$small,'/',r$cells,' 格；E < 1：',r$tiny,' 格。',if(r$tiny>0||r$small/r$cells>.2)'近似可能不適合，建議模擬 p-value。' else '符合本頁期望次數判準。')))
   }else{a<-results();a<-a[a$z==as.integer(input$zodiac),];tagList(h4(paste0(input$zodiac,'. ',z_names[as.integer(input$zodiac)])),hypotheses(input$tail,a$mu[1],if(input$kind=='numeric')'μ星座' else 'π星座'),lapply(seq_len(nrow(a)),function(i){r<-a[i,];div(class='result-block',h4(paste0(r$method,'_obt（',r$method,'-statistic）')),p('SE = ',fmt(r$se,4),'；',r$method,'_obt = ',fmt(r$stat,4),'；p = ',p_fmt(r$p)),div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'))}),if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。'))}
  })
- output$survey_diagram<-renderUI({al<-alpha();if(input$scope=='overall'&&input$kind=='numeric'){r<-anova();diagram_ui(r,al,'right','F',r$df2)}else if(is_chi()){r<-chi();diagram_ui(r,al,'right','chi')}else{a<-results();method<-if(input$kind=='numeric')input$method else 'z';r<-a[a$z==as.integer(input$zodiac)&a$method==method,];diagram_ui(r,al,input$tail,method)}})
+ output$survey_diagram<-renderUI({al<-alpha();if(input$scope=='overall'&&input$kind=='numeric'){r<-anova();diagram_ui(r,al,'right','F',r$df2)}else if(is_chi()){r<-chi();diagram_ui(r,al,'right','chi')}else{a<-results();method<-if(input$kind=='numeric')input$method else 'z';r<-a[a$z==as.integer(input$zodiac)&a$method==method,];h0<-paste0('H₀：',if(input$kind=='numeric')'μ' else 'π',' = ',format(round(r$mu,4),trim=TRUE,scientific=FALSE));diagram_ui(r,al,input$tail,method,h0=h0)}})
  output$survey_table<-renderUI({if(is_chi())HTML(html_table(chi_table()))else if(input$scope=='overall'&&input$kind=='numeric'){
   r<-anova();pop<-d$numeric[[input$variable]];g<-do.call(rbind,lapply(pop$groups,as.data.frame))
   tagList(h4('整體 F 檢定'),HTML(html_table(data.frame(方法=if(input$anova_method=='welch')'Welch ANOVA' else '單因子 ANOVA',F=fmt(r$stat,4),df1=r$df,df2=fmt(r$df2,4),p=p_fmt(r$p),結論=if(r$p<alpha())'拒絕 H₀' else '保留 H₀'))),

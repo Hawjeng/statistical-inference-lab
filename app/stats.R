@@ -46,14 +46,15 @@ ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
   out<-c(out,svg_text(X(r$mean[1]),y+if(pair)49 else 25,if(prop)paste0(fmt(r$mean[1]*100,2),'%') else fmt(r$mean[1]),size=11),'</g>')}
  out<-c(out,svg_text(480,H-7,if(prop)'類別比例（百分比）' else 'μ ± kσ：母體位置刻度；下排為原始數值（非 z／t-statistic）','#536c76',11),'</svg>');paste(out,collapse='')
 }
-distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,method='z',pview=FALSE,df2=NULL) {
+distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,method='z',pview=FALSE,df2=NULL,h0='H₀') {
  ischi<-method=='chi';isF<-method=='F';positive<-ischi||isF
  pdf<-if(isF)function(x)df(x,df,df2) else if(ischi)function(x)dchisq(x,df) else if(method=='t')function(x)dt(x,df) else dnorm
  hi<-if(isF)max(qf(.999,df,df2),stat*1.15,critical*1.6) else if(ischi)max(critical*1.6,stat*1.15,df+5*sqrt(2*df),6) else max(4.2,abs(stat)+.8,critical+.8);lo<-if(positive)0 else -hi
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
  extreme<-if(pview){if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat}else{if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical}
  col<-if(pview)'#169ac2' else '#d48226';label<-if(isF)'F 檢定量（F-statistic）' else if(ischi)'χ² 檢定量（chi-square statistic）' else paste0(method,' 檢定量（',method,'-statistic）')
- out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 355" role="img" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="355" fill="white"/>',svg_text(280,27,paste0('H₀ 下的 ',if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),size=14))
+ peak_x<-max(125,min(435,X(xx[which.max(density)])))
+ out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 355" role="img" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="355" fill="white"/>',svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
  run<-rle(extreme);end<-cumsum(run$lengths);start<-end-run$lengths+1
  for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s" fill-opacity=".3"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),col))}
  out<-c(out,sprintf('<polyline points="%s" fill="none" stroke="#344b58" stroke-width="2"/><path d="M56 232 H510" stroke="#344b58"/>',paste(sprintf('%.2f,%.2f',X(xx),Y(density)),collapse=' ')))
