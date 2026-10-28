@@ -1,6 +1,11 @@
 # Export the complete Shiny R application for GitHub Pages.
 options(repos=c(CRAN='https://cloud.r-project.org'))
 if(!requireNamespace('shinylive',quietly=TRUE))stop('請先 install.packages("shinylive")')
+# Only remove this project's generated export directory, never source/data.
+project_root<-normalizePath(getwd(),winslash='/',mustWork=TRUE)
+site_dir<-normalizePath(file.path(project_root,'site'),winslash='/',mustWork=FALSE)
+stopifnot(identical(dirname(site_dir),project_root),basename(site_dir)=='site')
+if(dir.exists(site_dir))unlink(site_dir,recursive=TRUE)
 shinylive::export('app','site',wasm_packages=TRUE,template_params=list(title='區間估計與假設檢定｜邱皓政統計互動教材'))
 dir.create('site/downloads',recursive=TRUE,showWarnings=FALSE)
 file.copy(list.files('downloads',full.names=TRUE),'site/downloads',recursive=TRUE,overwrite=TRUE)
