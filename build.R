@@ -19,7 +19,8 @@ page<-sub('lang="en"','lang="zh-Hant"',page,fixed=TRUE)
 version<-substr(Sys.getenv('GITHUB_SHA'),1,12)
 if(!nzchar(version))version<-substr(system('git rev-parse HEAD',intern=TRUE)[1],1,12)
 loader_path<-'site/shinylive/shinylive.js'
-loader<-paste(readLines(loader_path,warn=FALSE,encoding='UTF-8'),collapse='\n')
+loader<-rawToChar(readBin(loader_path,'raw',n=file.info(loader_path)$size))
+Encoding(loader)<-'UTF-8'
 needle<-'fetch("./app.json")'
 if(!grepl(needle,loader,fixed=TRUE))stop('Shinylive loader changed; review app JSON cache handling')
 loader<-sub(needle,paste0('fetch("./app.json?v=',version,'", {cache: "no-store"})'),loader,fixed=TRUE)
