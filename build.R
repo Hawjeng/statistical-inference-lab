@@ -10,5 +10,16 @@ file.copy('app/stats.R','site/stats.R',overwrite=TRUE)
 writeLines('','site/.nojekyll')
 page<-paste(readLines('site/index.html',warn=FALSE,encoding='UTF-8'),collapse='\n')
 page<-sub('lang="en"','lang="zh-Hant"',page,fixed=TRUE)
+# Version the loader and application JSON so updates do not reuse an older app.
+version<-substr(Sys.getenv('GITHUB_SHA'),1,12)
+if(!nzchar(version))version<-substr(system('git rev-parse HEAD',intern=TRUE)[1],1,12)
+loader_path<-'site/shinylive/shinylive.js'
+loader<-paste(readLines(loader_path,warn=FALSE,encoding='UTF-8'),collapse='\n')
+needle<-'fetch("./app.json")'
+if(!grepl(needle,loader,fixed=TRUE))stop('Shinylive loader changed; review app JSON cache handling')
+loader<-sub(needle,paste0('fetch("./app.json?v=',version,'", {cache: "no-store"})'),loader,fixed=TRUE)
+writeLines(enc2utf8(loader),loader_path,useBytes=TRUE)
+page<-sub('"./shinylive/shinylive.js"',paste0('"./shinylive/shinylive.js?v=',version,'"'),page,fixed=TRUE)
+page<-sub('</head>',paste0('<meta name="app-build" content="',version,'"/></head>'),page,fixed=TRUE)
 writeLines(enc2utf8(page),'site/index.html',useBytes=TRUE)
 cat('Export complete: site/\n')
