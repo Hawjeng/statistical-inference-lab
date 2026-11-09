@@ -154,13 +154,13 @@ server<-function(input,output,session) {
    lapply(seq_len(nrow(a)),function(i){
     r<-a[i,]
     is_z<-r$method=='z'
-    cv_label<-if(is_z)'zcv' else paste0('tcv(df = ',r$df,')')
+    cv_label<-if(is_z)'zcv' else 'tcv'
+    df_detail<-if(!is_z)paste0('（df = n − 1 = ',r$n,' − 1 = ',r$df,'）')
     spread_label<-if(is_z)'σ' else 's'
     spread<-if(is_z)r$sigma else r$sd
     div(class='result-block',
      h4(if(is_z)'z 信賴區間' else 't 信賴區間'),
-     if(!is_z)p(paste0('df = n − 1 = ',r$n,' − 1 = ',r$df)),
-     p(paste0(cv_label,' = ',fmt(r$ci_critical,4))),
+     p(paste0(cv_label,' = ',fmt(r$ci_critical,4),df_detail)),
      p(paste0('SE = ',spread_label,'/√n = ',fmt(spread,4),'/√',r$n,' = ',fmt(r$se,4))),
      p(paste0('CI = x̄ ± ',if(is_z)'zcv' else 'tcv(df)',' × SE')),
      p(paste0('= ',fmt(r$mean,4),' ± ',fmt(r$ci_critical,4),' × ',fmt(r$se,4),
