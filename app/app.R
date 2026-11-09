@@ -15,7 +15,8 @@ null_label<-function(tail,mu,param='μ')paste0('H₀：',param,if(tail=='left')'
 diagram_ui<-function(r,alpha,tail,method,df2=NULL,h0=NULL) {
  cv<-if(method=='chi')qchisq(1-alpha,r$df) else if(method=='F')qf(1-alpha,r$df,df2) else r$critical
  if(is.null(h0))h0<-if(method=='F')'H₀：μ₁ = ⋯ = μ₁₂' else if(method=='chi')if(r$mode=='independence')'H₀：星座與類別獨立' else 'H₀：類別比例符合全體' else null_label(tail,r$mu)
- HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,FALSE,df2,h0))
+ ci<-if(method %in% c('z','t'))r else NULL
+ HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,FALSE,df2,h0,ci=ci))
 }
 comparison_ui<-function(a,alpha,tail,param='μ')fluidRow(lapply(c('z','t'),function(m){r<-a[a$method==m,];column(6,h4(paste0(m,'-test')),diagram_ui(r,alpha,tail,m,h0=null_label(tail,r$mu,param)))}))
 hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H₀：',param,if(tail=='two')' = ' else if(tail=='left')' ≥ ' else ' ≤ ',fmt(mu,4),'<br>H₁：',param,if(tail=='two')' ≠ ' else if(tail=='left')' &lt; ' else ' &gt; ',fmt(mu,4),'</div>'))

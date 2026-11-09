@@ -46,16 +46,24 @@ ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
   out<-c(out,svg_text(X(r$mean[1]),y+if(pair)49 else 25,if(prop)paste0(fmt(r$mean[1]*100,2),'%') else fmt(r$mean[1]),size=11),'</g>')}
  out<-c(out,svg_text(480,H-7,if(prop)'類別比例（百分比）' else 'μ ± kσ：母體位置刻度；下排為原始數值（非 z／t-statistic）','#536c76',11),'</svg>');paste(out,collapse='')
 }
-distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,method='z',pview=FALSE,df2=NULL,h0='H₀') {
+distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,method='z',pview=FALSE,df2=NULL,h0='H₀',ci=NULL) {
  ischi<-method=='chi';isF<-method=='F';positive<-ischi||isF
  pdf<-if(isF)function(x)df(x,df,df2) else if(ischi)function(x)dchisq(x,df) else if(method=='t')function(x)dt(x,df) else dnorm
  hi<-if(isF)max(qf(.999,df,df2),stat*1.15,critical*1.6) else if(ischi)max(critical*1.6,stat*1.15,df+5*sqrt(2*df),6) else max(4.2,abs(stat)+.8,critical+.8);lo<-if(positive)0 else -hi
+ height<-355
+ if(!is.null(ci)){
+  # Put the raw endpoints on the same scale as the observed statistic.
+  ci_positions<-(c(ci$lower,ci$upper)-ci$mu)/ci$se
+  hi<-max(hi,abs(ci_positions)+.8)
+  lo<--hi
+  height<-449
+ }
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
  rejection<-if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical
  extreme<-if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat
  label<-if(isF)'F' else if(ischi)'χ²' else method
  peak_x<-max(125,min(435,X(xx[which.max(density)])))
- out<-c('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 355" role="img" style="width:100%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="355" fill="white"/>',svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
+ out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 %d" role="img" style="width:100%%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="%d" fill="white"/>',height,height),svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
  out<-c(out,'<defs><pattern id="alpha-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6L6 0" stroke="#cb7017" stroke-width="1.5"/></pattern></defs>')
  for(layer in 1:2){mask<-if(layer==1)extreme else rejection;run<-rle(mask);end<-cumsum(run$lengths);start<-end-run$lengths+1
  for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s" fill-opacity="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#169ac2' else 'url(#alpha-hatch)',if(layer==1)'.35' else '.9'))}}
@@ -68,7 +76,24 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  cv_label<-paste0(cv_name,' = ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical),'；α = ',alpha)
  obs_label<-paste0(if(ischi)'χ²' else paste0(method,'_obt'),' = ',fmt(stat),', p = ',p_fmt(p))
  obs_x<-max(135,min(425,X(stat)))
- out<-c(out,sprintf('<path d="M%.2f 80 V232 M%.2f 290 V299" stroke="#7c3aed" stroke-width="2.3"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#7c3aed',13),svg_text(524,237,label,size=14),svg_text(280,343,'橘色斜線：α 拒絕域　藍色面積：p-value',size=11),'</svg>');paste(out,collapse='')
+ out<-c(out,sprintf('<path d="M%.2f 80 V232 M%.2f 290 V299" stroke="#7c3aed" stroke-width="2.3"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#7c3aed',13),svg_text(524,237,label,size=14))
+ if(!is.null(ci)){
+  covers_zero<-ci$lower<=ci$mu && ci$mu<=ci$upper
+  ci_color<-if(covers_zero)'#2563eb' else '#c32d3b'
+  lower_x<-X(ci_positions[1]);upper_x<-X(ci_positions[2])
+  is_proportion<-!is.null(ci$approxOK)
+  raw_values<-if(is_proportion)paste0(fmt(100*c(ci$lower,ci$mean,ci$upper),2),'%') else fmt(c(ci$lower,ci$mean,ci$upper),4)
+  out<-c(out,
+   svg_text(280,339,paste0(fmt((1-alpha)*100,1),'% CI（原始尺度）｜',if(covers_zero)'涵蓋 0' else '未涵蓋 0'),ci_color,12),
+   sprintf('<path d="M%.2f 349 V403" stroke="#526b76" stroke-dasharray="3 3"/>',X(0)),
+   sprintf('<path d="M%.2f 374 H%.2f M%.2f 368 V380 M%.2f 368 V380" stroke="%s" stroke-width="2.5"/>',lower_x,upper_x,lower_x,upper_x,ci_color),
+   sprintf('<circle cx="%.2f" cy="374" r="4" fill="#7c3aed"/>',X(stat)),
+   svg_text(X(stat),362,paste0(if(is_proportion)'p̂ = ' else 'x̄ = ',raw_values[2]),'#7c3aed',12),
+   svg_text(lower_x-6,394,raw_values[1],ci_color,12,'end'),
+   svg_text(upper_x+6,394,raw_values[3],ci_color,12,'start'),
+   svg_text(X(0),417,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11))
+ }
+ out<-c(out,svg_text(280,height-12,'橘色斜線：α 拒絕域　藍色面積：p-value',size=11),'</svg>');paste(out,collapse='')
 }
 html_table <- function(a,reject=NULL) {
  heads<-paste0('<th>',esc(names(a)),'</th>',collapse='');rows<-vapply(seq_len(nrow(a)),function(i)paste0('<tr',if(!is.null(reject)&&reject[i])' class="reject"' else '', '>',paste0('<td>',esc(unlist(a[i,],use.names=FALSE)),'</td>',collapse=''),'</tr>'),character(1))
