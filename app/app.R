@@ -46,7 +46,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
  tabPanel('星座範例',
   card(h3('逐一星座，與十二星座整體比較'),
    fluidRow(column(4,selectInput('scope','示範問題',c('逐一星座 vs 全體參考值'='single','十二星座整體比較'='overall'))),
-    column(4,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'))),column(4,selectInput('variable','分析變數',choice_labels(d$numeric),selected='B5'))),
+    column(4,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'))),column(4,selectInput('variable','分析變數',choice_labels(d$numeric),selected='CT'))),
    fluidRow(column(3,numericInput('alpha','顯著水準 α',.05,min=.001,max=.2,step=.001)),column(3,selectInput('zodiac','選擇星座',setNames(as.character(1:12),paste0(1:12,'. ',z_names)))),
     column(3,conditionalPanel("input.scope == 'single' && (input.kind == 'numeric' || input.category_method == 'proportion')",selectInput('tail','檢定方向',tails))),column(3,note('檢定圖：左 z-test、右 t-test'))),
    conditionalPanel("input.kind == 'category' && input.scope == 'single'",fluidRow(column(6,selectInput('category_method','類別示範',c('指定事件的單一比例 z'='proportion','整個類別分布的卡方適合度'='gof'))),column(6,conditionalPanel("input.category_method == 'proportion'",uiOutput('category_choice'))))),
@@ -88,7 +88,7 @@ server<-function(input,output,session) {
  output$book_figure_title<-renderText(if(book()$type=='mean'&&!book_testing())'區間估計圖' else '檢定示意圖')
  output$book_diagram<-renderUI({b<-book();if(b$type!='mean')return(note('此範例用來示範抽樣配置或臨界值，未繪製單一樣本檢定圖。'));a<-book_test();r<-a[a$method==input$bm,];if(!book_testing())return(HTML(single_ci_svg(r,input$ba,b$unit)));div(style='max-width:850px;margin:auto',h4(paste0(input$bm,'-test')),diagram_ui(r,input$ba,input$bt,input$bm))})
  output$book_download<-renderUI({b<-book();a(href=paste0('https://hawjeng.github.io/statistical-inference-lab/',b$file),target='_blank',class='btn btn-default','下載對應 Excel 原檔 ↓')})
- observeEvent(input$kind,{pool<-if(input$kind=='numeric')d$numeric else d$categorical;updateSelectInput(session,'variable',choices=choice_labels(pool),selected=if(input$kind=='numeric')'B5' else 'PhoneBrand')})
+ observeEvent(input$kind,{pool<-if(input$kind=='numeric')d$numeric else d$categorical;updateSelectInput(session,'variable',choices=choice_labels(pool),selected=if(input$kind=='numeric')'CT' else 'PhoneBrand')})
  category_data<-reactive({req(input$kind=='category',d$categorical[[input$variable]]);d$categorical[[input$variable]]})
  output$category_choice<-renderUI({a<-category_data();selectInput('event','指定成功事件',setNames(as.character(seq_along(a$categories)),unlist(a$categories)))})
  counts<-reactive({a<-category_data();do.call(rbind,lapply(a$counts,unlist))})
