@@ -135,7 +135,17 @@ server<-function(input,output,session) {
  observeEvent(list(input$variable,input$scope,input$zodiac,input$category_method),mc_value(NULL),ignoreInit=TRUE)
  output$mc_result<-renderUI({p<-mc_value();req(!is.null(p));p('模擬 p = ',fmt(p,4),'；',if(p<alpha())'拒絕 H₀' else '保留 H₀','。5,000 次；p = (極端次數+1)/5001；固定種子 20261028。')})
  observeEvent(input$mc,{req(is_chi());set.seed(20261028);m<-counts();r<-if(input$scope=='overall')suppressWarnings(chisq.test(m,simulate.p.value=TRUE,B=5000)) else suppressWarnings(chisq.test(m[as.integer(input$zodiac),],p=colSums(m)/sum(m),simulate.p.value=TRUE,B=5000));mc_value(r$p.value)})
- observeEvent(input$save_csv,{tab<-if(is_chi())chi_table()else if(input$scope=='overall'&&input$kind=='numeric'){r<-anova();data.frame(method=input$anova_method,F=r$stat,df1=r$df,df2=r$df2,p=r$p,alpha=alpha(),decision=if(r$p<alpha())'拒絕 H0' else '保留 H0')}else results();lines<-capture.output(write.csv(tab,row.names=FALSE));session$sendCustomMessage('download-file',list(name=paste0(input$variable,'-results.csv'),mime='text/csv;charset=utf-8',content=paste0('\ufeff',paste(lines,collapse='\r\n'))))})
+ observeEvent(input$save_csv,{
+  tab<-if(is_chi())chi_table()else if(input$scope=='overall'&&input$kind=='numeric'){
+   r<-anova()
+   data.frame(method=input$anova_method,F=r$stat,df1=r$df,df2=r$df2,p=r$p,alpha=alpha(),decision=if(r$p<alpha())'拒絕 H0' else '保留 H0')
+  }else{
+   a<-results()
+   cbind(星座=paste0(a$z,'. ',z_names[a$z]),a)
+  }
+  lines<-capture.output(write.csv(tab,row.names=FALSE))
+  session$sendCustomMessage('download-file',list(name=paste0(input$variable,'-results.csv'),mime='text/csv;charset=utf-8',content=paste0('\ufeff',paste(lines,collapse='\r\n'))))
+ })
 
 }
 shinyApp(ui,server)
