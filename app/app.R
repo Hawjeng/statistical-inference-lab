@@ -46,7 +46,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
  tabPanel('星座範例',
   card(h3('逐一星座，與十二星座整體比較'),
    fluidRow(column(4,selectInput('scope','示範問題',c('逐一星座 vs 全體參考值'='single','十二星座整體比較'='overall'))),
-    column(4,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'))),column(4,selectInput('variable','分析變數',choice_labels(d$numeric),selected='CT'))),
+    column(4,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'),selected='category')),column(4,selectInput('variable','分析變數',choice_labels(d$categorical),selected='PhoneBrand'))),
    fluidRow(column(3,numericInput('alpha','顯著水準 α',.05,min=.001,max=.2,step=.001)),column(3,selectInput('zodiac','選擇星座',setNames(as.character(1:12),paste0(1:12,'. ',z_names)))),
     column(3,conditionalPanel("input.scope == 'single' && (input.kind == 'numeric' || input.category_method == 'proportion')",selectInput('tail','檢定方向',tails))),column(3,note('檢定圖：左 z-test、右 t-test'))),
    conditionalPanel("input.kind == 'category' && input.scope == 'single'",fluidRow(column(6,selectInput('category_method','類別示範',c('指定事件的單一比例 z'='proportion','整個類別分布的卡方適合度'='gof'))),column(6,conditionalPanel("input.category_method == 'proportion'",uiOutput('category_choice'))))),
@@ -94,7 +94,7 @@ server<-function(input,output,session) {
  counts<-reactive({a<-category_data();do.call(rbind,lapply(a$counts,unlist))})
  results<-reactive({al<-alpha();z<-as.integer(input$zodiac)
   if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);do.call(rbind,lapply(seq_along(pop$groups),function(i){g<-pop$groups[[i]];a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(g$n,g$mean,g$sd,pop$mu,pop$sigma,m,al,input$tail)));a$z<-i;a}))
-  }else{req(input$event);m<-counts();j<-as.integer(input$event);p0<-sum(m[,j])/sum(m);do.call(rbind,lapply(1:12,function(i){a<-prop_result(m[i,j],sum(m[i,]),p0,al,input$tail);a$z<-i;a}))}
+  }else{req(input$event);m<-counts();j<-as.integer(input$event);req(j %in% seq_len(ncol(m)));p0<-sum(m[,j])/sum(m);do.call(rbind,lapply(1:12,function(i){a<-prop_result(m[i,j],sum(m[i,]),p0,al,input$tail);a$z<-i;a}))}
  })
  chi<-reactive({req(input$kind=='category');chi_result(counts(),if(input$scope=='overall')'independence' else 'gof',as.integer(input$zodiac))})
  is_chi<-reactive(input$kind=='category'&&(input$scope=='overall'||input$category_method=='gof'))
@@ -115,16 +115,37 @@ server<-function(input,output,session) {
     if(input$variable=='DataPlan')note('吃到飽／非吃到飽；限量、預付卡、Wi-Fi only 為非吃到飽，無法判定列為缺失。'))
   }
  })
- output$scope_note<-renderUI({if(input$scope=='overall')note(if(input$kind=='numeric')'整體比較使用右尾 F 檢定；顯著表示至少一組平均數不同，不能直接指出哪個星座不同。下方各星座 CI 仍是描述性雙側區間。' else '十二星座 × 類別的卡方獨立性檢定固定右尾；顯著表示存在關聯，不直接指出差異在哪一個星座。') else note('逐一星座與全體參考值比較；CI 固定雙側。只有雙尾時，CI 涵蓋與檢定結論直接對應。μ±kσ 刻度不是 SE 或 z／t-statistic。')})
+ output$scope_note<-renderUI({if(input$scope=='overall')note(if(input$kind=='numeric')'整體比較使用右尾 F 檢定；顯著表示至少一組平均數不同，不能直接指出哪個星座不同。下方各星座 CI 仍是描述性雙側區間。' else '十二星座 × 類別的卡方獨立性檢定固定右尾；顯著表示存在關聯，不直接指出差異在哪一個星座。') else if(input$kind=='numeric')note('逐一星座與全體參考值比較；CI 固定雙側。只有雙尾時，CI 涵蓋與檢定結論直接對應。μ±kσ 刻度不是 SE 或 z／t-statistic。') else if(!is_chi())note('比例 CI 固定採雙側區間，以樣本比例 p̂ 估計標準誤。單一比例 z 檢定以全體參考比例 p₀ 計算標準誤。')})
  output$chart_legend<-renderUI({if(is_chi())note('每格列出 O、E 與 χ² 貢獻；卡方不繪製平均數 CI。')else HTML('<p class="legend"><span style="color:#2563eb">● ━ z</span>　<span style="color:#0891b2">◆ ┄ t</span>　黑色實線：μ　<span style="color:#c32d3b">紅色：CI 未涵蓋參考值</span></p>')})
  chi_table<-reactive({a<-chi();labs<-unlist(category_data()$categories);rows<-list();for(i in seq_len(nrow(a$obs)))for(j in seq_len(ncol(a$obs)))rows[[length(rows)+1]]<-data.frame(星座=z_names[if(input$scope=='overall')i else as.integer(input$zodiac)],類別=labs[j],觀察O=a$obs[i,j],期望E=fmt(a$expected[i,j],4),卡方貢獻=fmt(a$contrib[i,j],4));do.call(rbind,rows)})
  output$survey_chart<-renderUI({if(is_chi())HTML(html_table(chi_table()))else HTML(ci_svg(results(),z_names,input$kind=='category',as.integer(input$zodiac)))})
  output$survey_ci_steps<-renderUI({
-  req(input$kind=='numeric',input$zodiac)
+  req(input$zodiac,!is_chi())
   selected<-as.integer(input$zodiac)
   a<-results()
   a<-a[a$z==selected,]
   al<-alpha()
+  if(input$kind=='category'){
+   event<-as.integer(input$event)
+   successes<-counts()[selected,event]
+   event_label<-category_data()$categories[[event]]
+   n<-a$n
+   phat<-fmt(a$mean,4)
+   zcv<-fmt(a$ci_critical,4)
+   ci_se<-fmt(sqrt(a$mean*(1-a$mean)/n),4)
+   return(card(
+    h3(paste0(fmt((1-al)*100,1),'% 雙側比例信賴區間')),
+    p(paste0(selected,'. ',z_names[selected],'｜成功事件：',event_label)),
+    p(paste0('p̂ = x/n = ',successes,'/',n,' = ',phat)),
+    p(paste0('α/2 = ',fmt(al/2,4),'｜zcv = ',zcv)),
+    p('SE = √[p̂(1 − p̂)/n]'),
+    p(paste0('= √[',phat,' × (1 − ',phat,')/',n,'] = ',ci_se)),
+    p('CI = p̂ ± zcv × SE'),
+    p(paste0('= ',phat,' ± ',zcv,' × ',ci_se)),
+    p(paste0('= [',fmt(a$lower*100,2),'%, ',fmt(a$upper*100,2),'%]')),
+    note('本區間採 Wald CI，端點以未四捨五入的數值計算。')
+   ))
+  }
   card(
    h3(paste0(fmt((1-al)*100,1),'% 雙側信賴區間計算')),
    p(paste0(selected,'. ',z_names[selected],'｜n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),

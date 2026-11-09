@@ -11,9 +11,9 @@ mean_result <- function(n,mean,sd,mu,sigma,method,alpha,tail) {
 prop_result <- function(x,n,p0,alpha,tail) {
  phat<-x/n;se<-sqrt(p0*(1-p0)/n);stat<-(phat-p0)/se
  p<-if(tail=='two')2*pnorm(-abs(stat)) else if(tail=='left')pnorm(stat) else pnorm(-stat)
- z<-qnorm(1-alpha/2);den<-1+z*z/n;center<-(phat+z*z/(2*n))/den;half<-z*sqrt(phat*(1-phat)/n+z*z/(4*n*n))/den
+ z<-qnorm(1-alpha/2);half<-z*sqrt(phat*(1-phat)/n)
  data.frame(method='z',n,mean=phat,sd=NA,mu=p0,sigma=NA,se,critical=qnorm(1-alpha/(if(tail=='two')2 else 1)),ci_critical=z,stat,df=NA,
-  lower=center-half,upper=center+half,p,reject=p<alpha,excluded=p0<center-half||p0>center+half,approxOK=n*p0>=5&&n*(1-p0)>=5)
+  lower=phat-half,upper=phat+half,p,reject=p<alpha,excluded=p0<phat-half||p0>phat+half,approxOK=n*p0>=5&&n*(1-p0)>=5)
 }
 chi_result <- function(counts,mode='independence',selected=1) {
  if(mode=='independence') {

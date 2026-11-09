@@ -35,13 +35,12 @@ sleep_example <- rbind(mean_test(36,7.5,1,8,.7,'z',alpha,tail),
                        mean_test(36,7.5,1,8,.7,'t',alpha,tail))
 cat('\n課本範例：睡眠時間\n');print(sleep_example,row.names=FALSE)
 
-# 類別資料：指定成功事件；Wilson 雙側區間與未修正比例 z 檢定。
+# 類別資料：指定成功事件、雙側比例區間與未修正比例 z 檢定。
 proportion_test <- function(x,n,p0,alpha=.05,tail='two') {
  phat<-x/n;se<-sqrt(p0*(1-p0)/n);stat<-(phat-p0)/se;z<-qnorm(1-alpha/2)
- den<-1+z^2/n;center<-(phat+z^2/(2*n))/den
- half<-z*sqrt(phat*(1-phat)/n+z^2/(4*n^2))/den
+ half<-z*sqrt(phat*(1-phat)/n)
  p<-p_tail(stat,pnorm,tail)
- data.frame(x,n,phat,p0,se,lower=center-half,upper=center+half,statistic=stat,p,
+ data.frame(x,n,phat,p0,se,lower=phat-half,upper=phat+half,statistic=stat,p,
   decision=if(p<alpha)'拒絕 H0' else '保留 H0',approxOK=n*p0>=5&&n*(1-p0)>=5)
 }
 category_variable <- 'PhoneBrand'
