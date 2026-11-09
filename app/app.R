@@ -102,7 +102,23 @@ server<-function(input,output,session) {
   if(input$anova_method=='classic'){grand<-sum(g$n*g$mean)/N;ssb<-sum(g$n*(g$mean-grand)^2);ssw<-sum((g$n-1)*g$sd^2);df2<-N-k;F<-(ssb/(k-1))/(ssw/df2)}else{w<-g$n/g$sd^2;W<-sum(w);M<-sum(w*g$mean)/W;A<-sum((1-w/W)^2/(g$n-1));F<-(sum(w*(g$mean-M)^2)/(k-1))/(1+2*(k-2)*A/(k*k-1));df2<-(k*k-1)/(3*A)}
   list(stat=F,df=k-1,df2=df2,p=pf(F,k-1,df2,lower.tail=FALSE),N=N,k=k)
  })
- output$population<-renderUI({if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);div(class='population',paste0('有效 N = ',pop$N,'；全體 μ = ',fmt(pop$mu,4),'；母體 σ = ',fmt(pop$sigma,4)))}else{a<-category_data();div(class='population',paste0('有效 N = ',a$N,'；排除無法判定／缺失 ',a$excluded,' 筆。'),if(input$variable=='PhoneBrand')note('iPhone／非 iPhone；無手機編為非 iPhone，不確定或無法辨識的其他答案列為缺失。'),if(input$variable=='DataPlan')note('吃到飽／非吃到飽；限量、預付卡、Wi-Fi only 為非吃到飽，無法判定列為缺失。'))}})
+ output$population<-renderUI({
+  if(input$kind=='numeric'){
+   pop<-d$numeric[[input$variable]];req(pop)
+   variance<-pop$sigma^2
+   sample_summary<-if(input$variable=='CT'){
+    sample_variance<-variance*pop$N/(pop$N-1)
+    paste0('；樣本變異數 Var.s = ',fmt(sample_variance,4),'；樣本標準差 s = ',fmt(sqrt(sample_variance),4))
+   }
+   div(class='population',paste0('有效 N = ',pop$N,'；全體 μ = ',fmt(pop$mu,4),
+    '；母體變異數 Var.p = ',fmt(variance,4),'；母體標準差 σ = ',fmt(pop$sigma,4),sample_summary))
+  }else{
+   a<-category_data()
+   div(class='population',paste0('有效 N = ',a$N,'；排除無法判定／缺失 ',a$excluded,' 筆。'),
+    if(input$variable=='PhoneBrand')note('iPhone／非 iPhone；無手機編為非 iPhone，不確定或無法辨識的其他答案列為缺失。'),
+    if(input$variable=='DataPlan')note('吃到飽／非吃到飽；限量、預付卡、Wi-Fi only 為非吃到飽，無法判定列為缺失。'))
+  }
+ })
  output$scope_note<-renderUI({if(input$scope=='overall')note(if(input$kind=='numeric')'整體比較使用右尾 F 檢定；顯著表示至少一組平均數不同，不能直接指出哪個星座不同。下方各星座 CI 仍是描述性雙側區間。' else '十二星座 × 類別的卡方獨立性檢定固定右尾；顯著表示存在關聯，不直接指出差異在哪一個星座。') else note('逐一星座與全體參考值比較；CI 固定雙側。只有雙尾時，CI 涵蓋與檢定結論直接對應。μ±kσ 刻度不是 SE 或 z／t-statistic。')})
  output$chart_legend<-renderUI({if(is_chi())note('每格列出 O、E 與 χ² 貢獻；卡方不繪製平均數 CI。')else HTML('<p class="legend"><span style="color:#2563eb">● ━ z</span>　<span style="color:#0891b2">◆ ┄ t</span>　黑色實線：μ　<span style="color:#c32d3b">紅色：CI 未涵蓋參考值</span></p>')})
  chi_table<-reactive({a<-chi();labs<-unlist(category_data()$categories);rows<-list();for(i in seq_len(nrow(a$obs)))for(j in seq_len(ncol(a$obs)))rows[[length(rows)+1]]<-data.frame(星座=z_names[if(input$scope=='overall')i else as.integer(input$zodiac)],類別=labs[j],觀察O=a$obs[i,j],期望E=fmt(a$expected[i,j],4),卡方貢獻=fmt(a$contrib[i,j],4));do.call(rbind,rows)})
