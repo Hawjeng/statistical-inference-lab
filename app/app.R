@@ -106,12 +106,8 @@ server<-function(input,output,session) {
   if(input$kind=='numeric'){
    pop<-d$numeric[[input$variable]];req(pop)
    variance<-pop$sigma^2
-   sample_summary<-if(input$variable=='CT'){
-    sample_variance<-variance*pop$N/(pop$N-1)
-    paste0('；樣本變異數 Var.s = ',fmt(sample_variance,4),'；樣本標準差 s = ',fmt(sqrt(sample_variance),4))
-   }
    div(class='population',paste0('有效 N = ',pop$N,'；全體 μ = ',fmt(pop$mu,4),
-    '；母體變異數 Var.p = ',fmt(variance,4),'；母體標準差 σ = ',fmt(pop$sigma,4),sample_summary))
+    '；母體變異數 Var.p = ',fmt(variance,4),'；母體標準差 Stdev.p = ',fmt(pop$sigma,4)))
   }else{
    a<-category_data()
    div(class='population',paste0('有效 N = ',a$N,'；排除無法判定／缺失 ',a$excluded,' 筆。'),
