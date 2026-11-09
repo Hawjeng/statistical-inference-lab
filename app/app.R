@@ -12,11 +12,8 @@ tails<-c('雙尾 ≠'='two','左尾 <'='left','右尾 >'='right')
 card<-function(...,class='')div(class=paste('lab-card',class),...)
 note<-function(...)p(class='hint',...)
 null_label<-function(tail,mu,param='μ')paste0('H₀：',param,if(tail=='left')' ≥ ' else if(tail=='right')' ≤ ' else ' = ',format(round(mu,4),trim=TRUE,scientific=FALSE))
-diagram_ui<-function(r,alpha,tail,method,df2=NULL,h0=NULL) {
- cv<-if(method=='chi')qchisq(1-alpha,r$df) else if(method=='F')qf(1-alpha,r$df,df2) else r$critical
- if(is.null(h0))h0<-if(method=='F')'H₀：μ₁ = ⋯ = μ₁₂' else if(method=='chi')if(r$mode=='independence')'H₀：星座與類別獨立' else 'H₀：類別比例符合全體' else null_label(tail,r$mu)
- ci<-if(method %in% c('z','t'))r else NULL
- HTML(distribution_svg(r$stat,cv,r$df,tail,alpha,r$p,method,FALSE,df2,h0,ci=ci))
+diagram_ui<-function(r,alpha,tail,method,h0=null_label(tail,r$mu)) {
+ HTML(distribution_svg(r$stat,r$critical,r$df,tail,alpha,r$p,method,h0=h0,ci=r))
 }
 comparison_ui<-function(a,alpha,tail,param='μ')fluidRow(lapply(c('z','t'),function(m){r<-a[a$method==m,];column(6,h4(paste0(m,'-test')),diagram_ui(r,alpha,tail,m,h0=null_label(tail,r$mu,param)))}))
 hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H₀：',param,if(tail=='two')' = ' else if(tail=='left')' ≥ ' else ' ≤ ',fmt(mu,4),'<br>H₁：',param,if(tail=='two')' ≠ ' else if(tail=='left')' &lt; ' else ' &gt; ',fmt(mu,4),'</div>'))
@@ -45,16 +42,15 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
    uiOutput('book_question'),uiOutput('book_result'),uiOutput('book_download')),
   card(h3(textOutput('book_figure_title',inline=TRUE)),uiOutput('book_diagram'),note('CI 一律保持雙側 (1−α) 區間。未指定 μ₀ 的估計題不顯示觀察檢定量或 p-value。'))),
  tabPanel('星座範例',
-  card(h3('逐一星座，與十二星座整體比較'),
-   fluidRow(column(4,selectInput('scope','示範問題',c('逐一星座 vs 全體參考值'='single','十二星座整體比較'='overall'))),
-    column(4,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'),selected='category')),column(4,selectInput('variable','分析變數',choice_labels(d$categorical),selected='PhoneBrand'))),
+  card(h3('各星座的估計與檢定'),
+   fluidRow(column(6,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'),selected='category')),
+    column(6,selectInput('variable','分析變數',choice_labels(d$categorical),selected='PhoneBrand'))),
    fluidRow(column(3,numericInput('alpha','顯著水準 α',.05,min=.001,max=.2,step=.001)),column(3,selectInput('zodiac','選擇星座',setNames(as.character(1:12),paste0(1:12,'. ',z_names)))),
-    column(3,conditionalPanel("input.scope == 'single' && (input.kind == 'numeric' || input.category_method == 'proportion')",selectInput('tail','檢定方向',tails))),column(3,note('檢定圖：左 z-test、右 t-test'))),
-   conditionalPanel("input.kind == 'category' && input.scope == 'single'",fluidRow(column(6,selectInput('category_method','類別示範',c('指定事件的單一比例 z'='proportion','整個類別分布的卡方適合度'='gof'))),column(6,conditionalPanel("input.category_method == 'proportion'",uiOutput('category_choice'))))),
-   conditionalPanel("input.kind == 'numeric' && input.scope == 'overall'",selectInput('anova_method','整體平均數比較',c('Welch ANOVA：不要求各組變異數相等'='welch','一般單因子 ANOVA：等變異數假設'='classic'))),
+    column(3,selectInput('tail','檢定方向',tails)),column(3,conditionalPanel("input.kind == 'numeric'",note('檢定圖：左 z-test、右 t-test')))),
+   conditionalPanel("input.kind == 'category'",fluidRow(column(6,uiOutput('category_choice')))),
    uiOutput('population'),uiOutput('scope_note')),
-  fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),conditionalPanel("input.kind == 'numeric' || (input.scope == 'single' && input.category_method == 'proportion')",tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
-   column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。'),conditionalPanel("input.kind == 'category' && (input.scope == 'overall' || input.category_method == 'gof')",actionButton('mc','Monte Carlo 模擬（5,000 次）',class='btn-primary'),uiOutput('mc_result'))))),
+  fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG'))),
+   column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。')))),
   card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。')),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('教材下載與說明',card(h3('語法、資料與教材'),p('完整 Shiny 原始碼與資料放在 GitHub，新專案可下載後在 RStudio 執行。'),
@@ -62,7 +58,11 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
   a(href='https://hawjeng.github.io/statistical-inference-lab/downloads/zodiac_ci_calculations.xlsx',target='_blank','四變數 Excel 計算檔 ↓'),br(),
   a(href='https://hawjeng.github.io/statistical-inference-lab/downloads/zodiac_ci_report.html',target='_blank','四變數完整 HTML 報告 ↓'),br(),
   a(href='https://raw.githubusercontent.com/Hawjeng/statistical-inference-lab/main/analysis.R',target='_blank','R 分析語法 ↓'),
-  includeHTML('www/limitations.html'))))
+  includeHTML('www/limitations.html')))),
+ tags$footer(class='hint',
+  tags$hr(),
+  p('出自：邱皓政、林碧芳（2022）。統計學：原理與應用。五南。'),
+  p(a(href='https://hawjeng.github.io/books/statistics-2022.html','文獻連結')))
 )
 server<-function(input,output,session) {
  alpha<-reactive({req(input$alpha);validate(need(input$alpha>=.001&&input$alpha<=.2,'α 請輸入 0.001 到 0.20'));input$alpha})
@@ -97,12 +97,6 @@ server<-function(input,output,session) {
   if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);do.call(rbind,lapply(seq_along(pop$groups),function(i){g<-pop$groups[[i]];a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(g$n,g$mean,g$sd,pop$mu,pop$sigma,m,al,input$tail)));a$z<-i;a}))
   }else{req(input$event);m<-counts();j<-as.integer(input$event);req(j %in% seq_len(ncol(m)));p0<-sum(m[,j])/sum(m);do.call(rbind,lapply(1:12,function(i){a<-prop_result(m[i,j],sum(m[i,]),p0,al,input$tail);a$z<-i;a}))}
  })
- chi<-reactive({req(input$kind=='category');chi_result(counts(),if(input$scope=='overall')'independence' else 'gof',as.integer(input$zodiac))})
- is_chi<-reactive(input$kind=='category'&&(input$scope=='overall'||input$category_method=='gof'))
- anova<-reactive({req(input$kind=='numeric',input$scope=='overall');pop<-d$numeric[[input$variable]];g<-do.call(rbind,lapply(pop$groups,as.data.frame));k<-nrow(g);N<-sum(g$n)
-  if(input$anova_method=='classic'){grand<-sum(g$n*g$mean)/N;ssb<-sum(g$n*(g$mean-grand)^2);ssw<-sum((g$n-1)*g$sd^2);df2<-N-k;F<-(ssb/(k-1))/(ssw/df2)}else{w<-g$n/g$sd^2;W<-sum(w);M<-sum(w*g$mean)/W;A<-sum((1-w/W)^2/(g$n-1));F<-(sum(w*(g$mean-M)^2)/(k-1))/(1+2*(k-2)*A/(k*k-1));df2<-(k*k-1)/(3*A)}
-  list(stat=F,df=k-1,df2=df2,p=pf(F,k-1,df2,lower.tail=FALSE),N=N,k=k)
- })
  output$population<-renderUI({
   if(input$kind=='numeric'){
    pop<-d$numeric[[input$variable]];req(pop)
@@ -116,15 +110,26 @@ server<-function(input,output,session) {
     if(input$variable=='DataPlan')note('吃到飽／非吃到飽；限量、預付卡、Wi-Fi only 為非吃到飽，無法判定列為缺失。'))
   }
  })
- output$scope_note<-renderUI({if(input$scope=='overall')note(if(input$kind=='numeric')'整體比較使用右尾 F 檢定；顯著表示至少一組平均數不同，不能直接指出哪個星座不同。下方各星座 CI 仍是描述性雙側區間。' else '十二星座 × 類別的卡方獨立性檢定固定右尾；顯著表示存在關聯，不直接指出差異在哪一個星座。') else if(input$kind=='numeric')note('逐一星座與全體參考值比較；CI 固定雙側。只有雙尾時，CI 涵蓋與檢定結論直接對應。μ±kσ 刻度不是 SE 或 z／t-statistic。') else if(!is_chi())note('比例 CI 固定採雙側區間，以樣本比例 p̂ 估計標準誤。單一比例 z 檢定以全體參考比例 p₀ 計算標準誤。')})
- output$chart_legend<-renderUI({if(is_chi())note('每格列出 O、E 與 χ² 貢獻；卡方不繪製平均數 CI。')else HTML('<p class="legend"><span style="color:#2563eb">● ━ z</span>　<span style="color:#0891b2">◆ ┄ t</span>　黑色實線：μ　<span style="color:#c32d3b">紅色：CI 未涵蓋參考值</span></p>')})
- chi_table<-reactive({a<-chi();labs<-unlist(category_data()$categories);rows<-list();for(i in seq_len(nrow(a$obs)))for(j in seq_len(ncol(a$obs)))rows[[length(rows)+1]]<-data.frame(星座=z_names[if(input$scope=='overall')i else as.integer(input$zodiac)],類別=labs[j],觀察O=a$obs[i,j],期望E=fmt(a$expected[i,j],4),卡方貢獻=fmt(a$contrib[i,j],4));do.call(rbind,rows)})
- output$survey_chart<-renderUI({if(is_chi())HTML(html_table(chi_table()))else HTML(ci_svg(results(),z_names,input$kind=='category',as.integer(input$zodiac)))})
- output$survey_ci_steps<-renderUI({
-  req(input$zodiac,!is_chi())
-  selected<-as.integer(input$zodiac)
+ output$scope_note<-renderUI({
+  if(input$kind=='numeric')note('逐一星座與全體參考值比較。CI 固定採雙側區間。只有雙尾檢定時，CI 涵蓋與檢定結論直接對應。')
+  else note('比例 CI 固定採雙側區間，以樣本比例 p̂ 估計標準誤。單一比例 z 檢定以全體參考比例 p₀ 計算標準誤。')
+ })
+ output$chart_legend<-renderUI({
+  numeric<-input$kind=='numeric'
+  p(class='legend',span(style='color:#2563eb',if(numeric)'● ━ z' else '● ━ 比例 CI'),
+   if(numeric)span(style='color:#0891b2','◆ ┄ t'),
+   if(numeric)'黑色實線：μ' else '黑色實線：p₀',
+   span(style='color:#c32d3b','紅色：CI 未涵蓋參考值'))
+ })
+ output$survey_chart<-renderUI(HTML(ci_svg(results(),z_names,input$kind=='category',as.integer(input$zodiac))))
+ selected_results<-reactive({
+  req(input$zodiac)
   a<-results()
-  a<-a[a$z==selected,]
+  a[a$z==as.integer(input$zodiac),]
+ })
+ output$survey_ci_steps<-renderUI({
+  a<-selected_results()
+  selected<-as.integer(input$zodiac)
   al<-alpha()
   if(input$kind=='category'){
    event<-as.integer(input$event)
@@ -170,30 +175,36 @@ server<-function(input,output,session) {
    note('端點以未四捨五入的數值計算。')
   )
  })
- output$survey_result<-renderUI({al<-alpha()
-  if(input$scope=='overall'&&input$kind=='numeric'){r<-anova();tagList(h4(if(input$anova_method=='welch')'Welch ANOVA' else '一般單因子 ANOVA'),p('H₀：十二星座的母體平均數相等。'),p('H₁：至少一組平均數不同。'),p('F-statistic = ',fmt(r$stat,4),'；df₁ = ',r$df,'；df₂ = ',fmt(r$df2,3),'；p = ',p_fmt(r$p)),div(class=if(r$p<al)'decision reject' else 'decision',if(r$p<al)'拒絕 H₀' else '保留 H₀'),note('Welch 不要求組間變異數相等；一般 ANOVA 有等變異數假設。兩者都須考慮觀察值獨立性與抽樣設計。'))
-  }else if(is_chi()){r<-chi();tagList(h4('Pearson χ² 檢定'),p(if(input$scope=='overall')'H₀：星座與此類別變數獨立；H₁：存在關聯。' else 'H₀：所選星座的分布符合全體比例；H₁：至少一類比例不同。'),p('χ² = ',fmt(r$stat,4),'；df = ',r$df,'；近似 p = ',p_fmt(r$p)),div(class=if(r$p<al)'decision reject' else 'decision',if(r$p<al)'拒絕 H₀' else '保留 H₀'),p(class=if(r$tiny>0||r$small/r$cells>.2)'warning' else 'hint',paste0('E < 5：',r$small,'/',r$cells,' 格；E < 1：',r$tiny,' 格。',if(r$tiny>0||r$small/r$cells>.2)'近似可能不適合，建議模擬 p-value。' else '符合本頁期望次數判準。')))
-  }else{a<-results();a<-a[a$z==as.integer(input$zodiac),];tagList(h4(paste0(input$zodiac,'. ',z_names[as.integer(input$zodiac)])),hypotheses(input$tail,a$mu[1],paste0(if(input$kind=='numeric')'μ' else 'π',z_names[as.integer(input$zodiac)])),lapply(seq_len(nrow(a)),function(i){r<-a[i,];div(class='result-block',h4(paste0(r$method,'_obt（',r$method,'-statistic）')),p('SE = ',fmt(r$se,4),'；',r$method,'_obt = ',fmt(r$stat,4),'；p = ',p_fmt(r$p)),div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'))}),if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。'))}
+ output$survey_result<-renderUI({
+  a<-selected_results()
+  zodiac_name<-z_names[as.integer(input$zodiac)]
+  param<-paste0(if(input$kind=='numeric')'μ' else 'π',zodiac_name)
+  tagList(
+   h4(paste0(input$zodiac,'. ',zodiac_name)),
+   hypotheses(input$tail,a$mu[1],param),
+   lapply(seq_len(nrow(a)),function(i){
+    r<-a[i,]
+    div(class='result-block',h4(paste0(r$method,'_obt（',r$method,'-statistic）')),
+     p('SE = ',fmt(r$se,4),'；',r$method,'_obt = ',fmt(r$stat,4),'；p = ',p_fmt(r$p)),
+     div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'))
+   }),
+   if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。')
+  )
  })
- output$survey_diagram<-renderUI({al<-alpha();if(input$scope=='overall'&&input$kind=='numeric'){r<-anova();diagram_ui(r,al,'right','F',r$df2)}else if(is_chi()){r<-chi();diagram_ui(r,al,'right','chi')}else{a<-results();a<-a[a$z==as.integer(input$zodiac),];if(input$kind=='numeric')comparison_ui(a,al,input$tail)else diagram_ui(a,al,input$tail,'z',h0=null_label(input$tail,a$mu,'π'))}})
-
- output$survey_table<-renderUI({if(is_chi())HTML(html_table(chi_table()))else if(input$scope=='overall'&&input$kind=='numeric'){
-  r<-anova();pop<-d$numeric[[input$variable]];g<-do.call(rbind,lapply(pop$groups,as.data.frame))
-  tagList(h4('整體 F 檢定'),HTML(html_table(data.frame(方法=if(input$anova_method=='welch')'Welch ANOVA' else '單因子 ANOVA',F=fmt(r$stat,4),df1=r$df,df2=fmt(r$df2,4),p=p_fmt(r$p),結論=if(r$p<alpha())'拒絕 H₀' else '保留 H₀'))),
-   h4('各星座摘要（不是逐一檢定結果）'),HTML(html_table(data.frame(星座=paste0(1:12,'. ',z_names),n=g$n,平均數=fmt(g$mean,4),樣本SD=fmt(g$sd,4)))))
- }else{a<-results();tab<-result_table(a);tab<-cbind(星座=paste0(a$z,'. ',z_names[a$z]),tab);HTML(html_table(tab,a$reject))}})
- mc_value<-reactiveVal(NULL)
- observeEvent(list(input$variable,input$scope,input$zodiac,input$category_method),mc_value(NULL),ignoreInit=TRUE)
- output$mc_result<-renderUI({p<-mc_value();req(!is.null(p));p('模擬 p = ',fmt(p,4),'；',if(p<alpha())'拒絕 H₀' else '保留 H₀','。5,000 次；p = (極端次數+1)/5001；固定種子 20261028。')})
- observeEvent(input$mc,{req(is_chi());set.seed(20261028);m<-counts();r<-if(input$scope=='overall')suppressWarnings(chisq.test(m,simulate.p.value=TRUE,B=5000)) else suppressWarnings(chisq.test(m[as.integer(input$zodiac),],p=colSums(m)/sum(m),simulate.p.value=TRUE,B=5000));mc_value(r$p.value)})
+ output$survey_diagram<-renderUI({
+  a<-selected_results()
+  al<-alpha()
+  if(input$kind=='numeric')comparison_ui(a,al,input$tail)
+  else diagram_ui(a,al,input$tail,'z',h0=null_label(input$tail,a$mu,'π'))
+ })
+ output$survey_table<-renderUI({
+  a<-results()
+  tab<-cbind(星座=paste0(a$z,'. ',z_names[a$z]),result_table(a))
+  HTML(html_table(tab,a$reject))
+ })
  observeEvent(input$save_csv,{
-  tab<-if(is_chi())chi_table()else if(input$scope=='overall'&&input$kind=='numeric'){
-   r<-anova()
-   data.frame(method=input$anova_method,F=r$stat,df1=r$df,df2=r$df2,p=r$p,alpha=alpha(),decision=if(r$p<alpha())'拒絕 H0' else '保留 H0')
-  }else{
-   a<-results()
-   cbind(星座=paste0(a$z,'. ',z_names[a$z]),a)
-  }
+  a<-results()
+  tab<-cbind(星座=paste0(a$z,'. ',z_names[a$z]),a)
   lines<-capture.output(write.csv(tab,row.names=FALSE))
   session$sendCustomMessage('download-file',list(name=paste0(input$variable,'-results.csv'),mime='text/csv;charset=utf-8',content=paste0('\ufeff',paste(lines,collapse='\r\n'))))
  })

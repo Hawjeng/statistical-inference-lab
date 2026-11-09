@@ -1,7 +1,7 @@
 # 區間估計與假設檢定：課本範例與十二星座
 # 在 RStudio 開啟本檔，將工作目錄設為專案資料夾後 Source。
 # 所有區間均為雙側 (1-alpha) CI；尾向只影響假設檢定。
-# 以 Base R 即可重現網站平均數、比例及卡方近似檢定。
+# 以 Base R 重現網站的單樣本平均數與比例估計及檢定。
 suppressWarnings(try(Sys.setlocale('LC_CTYPE','English_United States.utf8'),silent=TRUE))
 alpha <- .05
 tail <- 'two' # 'two'、'left'、'right'
@@ -50,15 +50,6 @@ p0<-sum(m[,1])/sum(m)
 proportion_results<-do.call(rbind,lapply(1:12,function(i)cbind(星座=names_z[i],
  proportion_test(m[i,1],sum(m[i,]),p0,alpha,tail))))
 cat('\n比例 z：成功事件 =',colnames(m)[1],'\n');print(proportion_results,row.names=FALSE)
-
-# 卡方獨立性檢定、所選星座對全體比例的適合度示範。
-cat('\n卡方獨立性檢定\n');chi_independence<-chisq.test(m,correct=FALSE);print(chi_independence)
-cat('\n卡方適合度檢定（水瓶座 vs 全體比例）\n')
-chi_gof<-chisq.test(m[1,],p=colSums(m)/sum(m));print(chi_gof)
-cat('\n期望次數 E<5 的格子：',sum(chi_independence$expected<5),'/',length(m),'\n')
-# 稀疏表：R 的模擬法也可以參考；結果與網站使用不同亂數演算法，不需逐位相同。
-# set.seed(20261028);chisq.test(m,simulate.p.value=TRUE,B=5000)
-# set.seed(20261028);chisq.test(m[1,],p=colSums(m)/sum(m),simulate.p.value=TRUE,B=5000)
 
 # R 圖：黑色 mu 實線；每星座成對 z/t；端點在外側；sigma 位置刻度。
 plot_ci <- function(variable='B5') {
