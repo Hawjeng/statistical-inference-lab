@@ -53,7 +53,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
    conditionalPanel("input.kind == 'numeric' && input.scope == 'overall'",selectInput('anova_method','整體平均數比較',c('Welch ANOVA：不要求各組變異數相等'='welch','一般單因子 ANOVA：等變異數假設'='classic'))),
    uiOutput('population'),uiOutput('scope_note')),
   fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),conditionalPanel("input.kind == 'numeric' || (input.scope == 'single' && input.category_method == 'proportion')",tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
-   column(4,card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。'),conditionalPanel("input.kind == 'category' && (input.scope == 'overall' || input.category_method == 'gof')",actionButton('mc','Monte Carlo 模擬（5,000 次）',class='btn-primary'),uiOutput('mc_result'))))),
+   column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。'),conditionalPanel("input.kind == 'category' && (input.scope == 'overall' || input.category_method == 'gof')",actionButton('mc','Monte Carlo 模擬（5,000 次）',class='btn-primary'),uiOutput('mc_result'))))),
   card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。')),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('教材下載與說明',card(h3('語法、資料與教材'),p('完整 Shiny 原始碼與資料放在 GitHub，新專案可下載後在 RStudio 執行。'),
@@ -119,6 +119,35 @@ server<-function(input,output,session) {
  output$chart_legend<-renderUI({if(is_chi())note('每格列出 O、E 與 χ² 貢獻；卡方不繪製平均數 CI。')else HTML('<p class="legend"><span style="color:#2563eb">● ━ z</span>　<span style="color:#0891b2">◆ ┄ t</span>　黑色實線：μ　<span style="color:#c32d3b">紅色：CI 未涵蓋參考值</span></p>')})
  chi_table<-reactive({a<-chi();labs<-unlist(category_data()$categories);rows<-list();for(i in seq_len(nrow(a$obs)))for(j in seq_len(ncol(a$obs)))rows[[length(rows)+1]]<-data.frame(星座=z_names[if(input$scope=='overall')i else as.integer(input$zodiac)],類別=labs[j],觀察O=a$obs[i,j],期望E=fmt(a$expected[i,j],4),卡方貢獻=fmt(a$contrib[i,j],4));do.call(rbind,rows)})
  output$survey_chart<-renderUI({if(is_chi())HTML(html_table(chi_table()))else HTML(ci_svg(results(),z_names,input$kind=='category',as.integer(input$zodiac)))})
+ output$survey_ci_steps<-renderUI({
+  req(input$kind=='numeric',input$zodiac)
+  selected<-as.integer(input$zodiac)
+  a<-results()
+  a<-a[a$z==selected,]
+  al<-alpha()
+  card(
+   h3(paste0(fmt((1-al)*100,1),'% 雙側信賴區間計算')),
+   p(paste0(selected,'. ',z_names[selected],'｜n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),
+   p(paste0('α = ',fmt(al,3),'｜每尾 α/2 = ',fmt(al/2,4))),
+   lapply(seq_len(nrow(a)),function(i){
+    r<-a[i,]
+    is_z<-r$method=='z'
+    cv_label<-if(is_z)'zcv' else paste0('tcv(df = ',r$df,')')
+    spread_label<-if(is_z)'σ' else 's'
+    spread<-if(is_z)r$sigma else r$sd
+    div(class='result-block',
+     h4(if(is_z)'z 信賴區間' else 't 信賴區間'),
+     if(!is_z)p(paste0('df = n − 1 = ',r$n,' − 1 = ',r$df)),
+     p(paste0(cv_label,' = ',fmt(r$ci_critical,4))),
+     p(paste0('SE = ',spread_label,'/√n = ',fmt(spread,4),'/√',r$n,' = ',fmt(r$se,4))),
+     p(paste0('CI = x̄ ± ',if(is_z)'zcv' else 'tcv(df)',' × SE')),
+     p(paste0('= ',fmt(r$mean,4),' ± ',fmt(r$ci_critical,4),' × ',fmt(r$se,4),
+      ' = [',fmt(r$lower,4),', ',fmt(r$upper,4),']'))
+    )
+   }),
+   note('端點以未四捨五入的數值計算。')
+  )
+ })
  output$survey_result<-renderUI({al<-alpha()
   if(input$scope=='overall'&&input$kind=='numeric'){r<-anova();tagList(h4(if(input$anova_method=='welch')'Welch ANOVA' else '一般單因子 ANOVA'),p('H₀：十二星座的母體平均數相等。'),p('H₁：至少一組平均數不同。'),p('F-statistic = ',fmt(r$stat,4),'；df₁ = ',r$df,'；df₂ = ',fmt(r$df2,3),'；p = ',p_fmt(r$p)),div(class=if(r$p<al)'decision reject' else 'decision',if(r$p<al)'拒絕 H₀' else '保留 H₀'),note('Welch 不要求組間變異數相等；一般 ANOVA 有等變異數假設。兩者都須考慮觀察值獨立性與抽樣設計。'))
   }else if(is_chi()){r<-chi();tagList(h4('Pearson χ² 檢定'),p(if(input$scope=='overall')'H₀：星座與此類別變數獨立；H₁：存在關聯。' else 'H₀：所選星座的分布符合全體比例；H₁：至少一類比例不同。'),p('χ² = ',fmt(r$stat,4),'；df = ',r$df,'；近似 p = ',p_fmt(r$p)),div(class=if(r$p<al)'decision reject' else 'decision',if(r$p<al)'拒絕 H₀' else '保留 H₀'),p(class=if(r$tiny>0||r$small/r$cells>.2)'warning' else 'hint',paste0('E < 5：',r$small,'/',r$cells,' 格；E < 1：',r$tiny,' 格。',if(r$tiny>0||r$small/r$cells>.2)'近似可能不適合，建議模擬 p-value。' else '符合本頁期望次數判準。')))
