@@ -31,16 +31,24 @@ fmt <- function(x,d=3) ifelse(is.finite(x),formatC(x,digits=d,format='f'),'—')
 p_fmt <- function(x) ifelse(x<.0001,'< .0001',formatC(x,digits=4,format='f'))
 svg_text <- function(x,y,label,col='#334155',size=13,anchor='middle') sprintf('<text x="%.2f" y="%.2f" fill="%s" font-size="%s" text-anchor="%s">%s</text>',x,y,col,size,anchor,esc(label))
 ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
- ref<-a$mu[1];sigma<-a$sigma[1];rg<-range(a$lower,a$upper,ref);pad<-diff(rg)*.18;if(pad==0)pad<-.1;rg<-rg+c(-pad,pad)
+ ref<-a$mu[1];rg<-range(a$lower,a$upper,ref);pad<-diff(rg)*.18;if(pad==0)pad<-.1;rg<-rg+c(-pad,pad)
+ if(!prop && floor(rg[2])-ceiling(rg[1])<1)rg<-c(floor(rg[1]),ceiling(rg[2]))
  X<-function(x)205+540*(x-rg[1])/diff(rg)
  pair<-length(unique(a$method))>1
  step<-if(pair)104 else 80
  first_y<-72
  grid_bottom<-first_y+12*step-22
- H<-grid_bottom+96
+ H<-grid_bottom+if(prop)96 else 44
  out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 %s" role="img" aria-label="各星座雙側信賴區間" style="width:100%%;min-width:740px;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="960" height="%s" fill="white"/>',H,H))
- if(!prop){ks<-pretty((rg-ref)/sigma,n=5);ticks<-ref+ks*sigma;labs<-vapply(ks,function(k)if(abs(k)<1e-10)'μ' else paste0('μ',if(k<0)'−' else '+',format(abs(k),trim=TRUE),'σ'),character(1))}else{ticks<-pretty(rg,n=5);labs<-paste0(round(ticks*100),'%')}
- for(j in seq_along(ticks))if(ticks[j]>=rg[1]&&ticks[j]<=rg[2])out<-c(out,sprintf('<path d="M%.2f 42 V%s" stroke="#e2e8f0"/>',X(ticks[j]),grid_bottom),svg_text(X(ticks[j]),grid_bottom+25,labs[j],size=18),if(!prop)svg_text(X(ticks[j]),grid_bottom+48,fmt(ticks[j]),'#536c76',16))
+ if(prop){
+  ticks<-pretty(rg,n=5)
+  labs<-paste0(round(ticks*100),'%')
+ }else{
+  tick_step<-max(1,round(diff(pretty(rg,n=4))[1]))
+  ticks<-seq(ceiling(rg[1]/tick_step),floor(rg[2]/tick_step))*tick_step
+  labs<-format(ticks,trim=TRUE,scientific=FALSE)
+ }
+ for(j in seq_along(ticks))if(ticks[j]>=rg[1]&&ticks[j]<=rg[2])out<-c(out,sprintf('<path d="M%.2f 42 V%s" stroke="#e2e8f0"/>',X(ticks[j]),grid_bottom),svg_text(X(ticks[j]),grid_bottom+25,labs[j],size=18))
  out<-c(out,sprintf('<path d="M%.2f 42 V%s" stroke="black" stroke-width="1.7"/>',X(ref),grid_bottom),svg_text(X(ref),26,paste(if(prop)'p₀ =' else 'μ =',fmt(ref,4)),'#000',20))
  for(i in 1:12){r<-a[a$z==i,];y<-first_y+(i-1)*step
   out<-c(out,sprintf('<g><rect x="0" y="%s" width="950" height="%s" rx="5" fill="%s"/>',y-22,step-6,if(i==selected)'#f0f7fa' else 'transparent'),svg_text(12,y+13,paste0(i,'. ',names_z[i]),size=22,anchor='start'),svg_text(12,y+38,paste('n =',r$n[1]),'#536c76',17,'start'))
@@ -49,7 +57,8 @@ ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
     if(b$method=='z')sprintf('<circle cx="%.2f" cy="%s" r="3.5" fill="%s"/>',m,yy,col) else sprintf('<polygon points="%.2f,%s %.2f,%s %.2f,%s %.2f,%s" fill="%s"/>',m,yy-4,m+4,yy,m,yy+4,m-4,yy,col),
     svg_text(l-9,yy+6,if(prop)paste0(fmt(b$lower*100,2),'%') else fmt(b$lower),col,18,'end'),svg_text(u+9,yy+6,if(prop)paste0(fmt(b$upper*100,2),'%') else fmt(b$upper),col,18,'start'))}
   out<-c(out,svg_text(X(r$mean[1]),y+if(pair)64 else 31,if(prop)paste0(fmt(r$mean[1]*100,2),'%') else fmt(r$mean[1]),size=18),'</g>')}
- out<-c(out,svg_text(480,H-12,if(prop)'類別比例（百分比）' else 'μ ± kσ：母體位置刻度；下排為原始數值（非 z／t-statistic）','#536c76',16),'</svg>');paste(out,collapse='')
+ if(prop)out<-c(out,svg_text(480,H-12,'類別比例（百分比）','#536c76',16))
+ paste(c(out,'</svg>'),collapse='')
 }
 distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,method='z',pview=FALSE,df2=NULL,h0='H₀',ci=NULL) {
  ischi<-method=='chi';isF<-method=='F';positive<-ischi||isF
