@@ -1,17 +1,29 @@
 library(shiny)
 app<-source('app.R',encoding='UTF-8')$value
-testServer(app,{
+mock<-MockShinySession$new()
+csv_download<-NULL
+mock$sendCustomMessage<-function(type,message){
+ if(type=='download-file')csv_download<<-message
+}
+testServer(app,session=mock,{
  session$setInputs(example='Ch09p217ex9.2',ba=.05,bmu=8,bsigma=.7,bm='z',bt='left',bn=10,
   kind='numeric',variable='B5',alpha=.05,zodiac='1',tail='two',method='t')
  session$flushReact()
  stopifnot(abs(book_test()$stat[1]+4.2857142857)<1e-8)
  a<-results();stopifnot(nrow(a)==24,abs(a$p[2]-.04338376718)<1e-8)
- h<-output$survey_chart;stopifnot(grepl('μ',h$html),grepl('σ',h$html),grepl('1. 水瓶座',h$html,fixed=TRUE))
+ h<-output$survey_chart;stopifnot(grepl('μ',h$html),!grepl('母體位置刻度',h$html,fixed=TRUE),grepl('1. 水瓶座',h$html,fixed=TRUE))
  ci0<-a[,c('lower','upper')];session$setInputs(tail='left');session$flushReact();stopifnot(identical(ci0,results()[,c('lower','upper')]))
  stopifnot(grepl('H₀：μ ≥',output$survey_diagram$html,fixed=TRUE),grepl('z-test',output$survey_diagram$html,fixed=TRUE),grepl('t-test',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(tail='right');session$flushReact();stopifnot(grepl('H₀：μ ≤',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(kind='category',variable='PhoneBrand',event='1');session$flushReact()
  stopifnot(ncol(counts())==2,sum(counts())==706,nrow(results())==12)
+ aries<-results()[3,]
+ stopifnot(round(aries$ci_se,6)==.059697,round(aries$se,6)==.061598,
+  round(aries$lower,6)==.670230,round(aries$upper,6)==.904238)
+ session$setInputs(save_csv=1)
+ stopifnot(identical(csv_download$name,'PhoneBrand-results.csv'))
+ tab<-read.csv(text=sub('^\\ufeff','',csv_download$content),check.names=FALSE)
+ stopifnot(round(tab[['信賴區間標準誤']][3],6)==.059697,round(tab[['假設檢定標準誤']][3],6)==.061598)
  session$setInputs(variable='DataPlan');session$flushReact()
  stopifnot(ncol(counts())==2,sum(counts())==710,nrow(results())==12)
  session$setInputs(example='Ch08p166t8.1',bn=1000);session$flushReact();stopifnot(grepl('配置樣本數',output$book_result$html))

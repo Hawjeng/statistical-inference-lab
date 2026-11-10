@@ -5,14 +5,15 @@ mean_result <- function(n,mean,sd,mu,sigma,method,alpha,tail) {
  ci_cv<-if(method=='z')qnorm(1-alpha/2) else qt(1-alpha/2,n-1)
  stat<-(mean-mu)/se;cdf<-if(method=='z')pnorm else function(q)pt(q,n-1)
  p<-if(tail=='two')2*cdf(-abs(stat)) else if(tail=='left')cdf(stat) else cdf(-stat)
- data.frame(method,n,mean,sd,mu,sigma,se,critical=cv,ci_critical=ci_cv,stat,df=if(method=='t')n-1 else NA,
+ data.frame(method,n,mean,sd,mu,sigma,ci_se=se,se,critical=cv,ci_critical=ci_cv,stat,df=if(method=='t')n-1 else NA,
   lower=mean-ci_cv*se,upper=mean+ci_cv*se,p,reject=p<alpha,excluded=mu<mean-ci_cv*se||mu>mean+ci_cv*se)
 }
 prop_result <- function(x,n,p0,alpha,tail) {
  phat<-x/n;se<-sqrt(p0*(1-p0)/n);stat<-(phat-p0)/se
  p<-if(tail=='two')2*pnorm(-abs(stat)) else if(tail=='left')pnorm(stat) else pnorm(-stat)
- z<-qnorm(1-alpha/2);half<-z*sqrt(phat*(1-phat)/n)
- data.frame(method='z',n,mean=phat,sd=NA,mu=p0,sigma=NA,se,critical=qnorm(1-alpha/(if(tail=='two')2 else 1)),ci_critical=z,stat,df=NA,
+ ci_se<-sqrt(phat*(1-phat)/n)
+ z<-qnorm(1-alpha/2);half<-z*ci_se
+ data.frame(method='z',n,mean=phat,sd=NA,mu=p0,sigma=NA,ci_se,se,critical=qnorm(1-alpha/(if(tail=='two')2 else 1)),ci_critical=z,stat,df=NA,
   lower=phat-half,upper=phat+half,p,reject=p<alpha,excluded=p0<phat-half||p0>phat+half,approxOK=n*p0>=5&&n*(1-p0)>=5)
 }
 chi_result <- function(counts,mode='independence',selected=1) {

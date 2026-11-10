@@ -18,7 +18,8 @@ diagram_ui<-function(r,alpha,tail,method,h0=null_label(tail,r$mu)) {
 comparison_ui<-function(a,alpha,tail,param='μ')fluidRow(lapply(c('z','t'),function(m){r<-a[a$method==m,];column(6,h4(paste0(m,'-test')),diagram_ui(r,alpha,tail,m,h0=null_label(tail,r$mu,param)))}))
 hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H₀：',param,if(tail=='two')' = ' else if(tail=='left')' ≥ ' else ' ≤ ',fmt(mu,4),'<br>H₁：',param,if(tail=='two')' ≠ ' else if(tail=='left')' &lt; ' else ' &gt; ',fmt(mu,4),'</div>'))
 result_table<-function(a) {
- data.frame(方法=a$method,n=a$n,平均數=fmt(a$mean,4),SE=fmt(a$se,4),CI下限=fmt(a$lower,4),CI上限=fmt(a$upper,4),
+ data.frame(方法=a$method,n=a$n,平均數=fmt(a$mean,4),信賴區間標準誤=fmt(a$ci_se,4),CI下限=fmt(a$lower,4),CI上限=fmt(a$upper,4),
+  假設檢定標準誤=fmt(a$se,4),
   `觀察檢定量（z_obt／t_obt）`=fmt(a$stat,4),df=ifelse(is.na(a$df),'—',a$df),臨界值=fmt(a$critical,4),p值=p_fmt(a$p),結論=ifelse(a$reject,'拒絕 H₀','保留 H₀'),check.names=FALSE)
 }
 ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css'),tags$script(src='downloads.js'),
@@ -138,7 +139,7 @@ server<-function(input,output,session) {
    n<-a$n
    phat<-fmt(a$mean,4)
    zcv<-fmt(a$ci_critical,4)
-   ci_se<-fmt(sqrt(a$mean*(1-a$mean)/n),4)
+   ci_se<-fmt(a$ci_se,4)
    return(card(
     h3(paste0(fmt((1-al)*100,1),'% 雙側比例信賴區間')),
     p(paste0(selected,'. ',z_names[selected],'｜成功事件：',event_label)),
@@ -185,7 +186,7 @@ server<-function(input,output,session) {
    lapply(seq_len(nrow(a)),function(i){
     r<-a[i,]
     div(class='result-block',h4(paste0(r$method,'_obt（',r$method,'-statistic）')),
-     p('SE = ',fmt(r$se,4),'；',r$method,'_obt = ',fmt(r$stat,4),'；p = ',p_fmt(r$p)),
+     p('假設檢定標準誤 = ',fmt(r$se,4),'；',r$method,'_obt = ',fmt(r$stat,4),'；p = ',p_fmt(r$p)),
      div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'))
    }),
    if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。')
@@ -205,6 +206,7 @@ server<-function(input,output,session) {
  observeEvent(input$save_csv,{
   a<-results()
   tab<-cbind(星座=paste0(a$z,'. ',z_names[a$z]),a)
+  names(tab)[match(c('ci_se','se'),names(tab))]<-c('信賴區間標準誤','假設檢定標準誤')
   lines<-capture.output(write.csv(tab,row.names=FALSE))
   session$sendCustomMessage('download-file',list(name=paste0(input$variable,'-results.csv'),mime='text/csv;charset=utf-8',content=paste0('\ufeff',paste(lines,collapse='\r\n'))))
  })
