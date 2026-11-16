@@ -360,6 +360,18 @@ server<-function(input,output,session) {
   files<-analysis_download(scripts,input$code_lang,stem,title)
   filename<-paste0(stem,'.',ext)
   command<-paste(if(input$code_lang=='r')'Rscript' else 'python',filename)
+  console<-if(input$code_lang=='r'){
+   runner<-new.env()
+   runner$read.csv<-function(file,...){
+    stopifnot(identical(file,files$data_file))
+    con<-textConnection(files$csv,encoding='UTF-8')
+    on.exit(close(con))
+    utils::read.csv(con,...)
+   }
+   tags$pre(class='analysis-code',paste(capture.output(eval(parse(text=files$code),runner)),collapse='\n'))
+  }else tagList(
+   tags$button(type='button',class='btn btn-default',onclick='runAnalysisPython(this)','執行 Python'),
+   tags$pre(class='analysis-code python-console',role='status','執行後會顯示原始輸出。'))
   tagList(h4(title),
    div(class='code-columns',
     div(h5(paste('可執行的',language,'語法')),
@@ -372,7 +384,8 @@ server<-function(input,output,session) {
      p(tags$code(command)),
      tags$pre(class='analysis-code',tags$code(files$code)),
      tags$pre(class='analysis-data',hidden=NA,files$csv)),
-    div(h5('分析結果'),result)))
+    div(h5(paste(language,'主控台原始輸出')),console,
+     tags$details(tags$summary('整理後的分析結果'),result))))
  })
  observeEvent(input$save_csv,{
   a<-all_results()

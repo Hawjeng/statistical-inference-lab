@@ -21,3 +21,24 @@ function downloadAnalysisData(button) {
   const csv = button.closest('.code-columns').querySelector('.analysis-data').textContent;
   saveLocalFile(csv + '\n', button.dataset.filename, 'text/csv;charset=utf-8');
 }
+function runAnalysisPython(button) {
+  const columns = button.closest('.code-columns');
+  const output = columns.querySelector('.python-console');
+  const data = columns.querySelector('.analysis-data');
+
+  button.disabled = true;
+  output.textContent = '正在載入 Python 並執行語法…';
+  const worker = new Worker('python-console.js');
+  function finish(message) {
+    output.textContent = message;
+    button.disabled = false;
+    worker.terminate();
+  }
+  worker.onmessage = ({ data }) => finish(data);
+  worker.onerror = () => finish('Python 執行環境載入失敗。可下載語法與 CSV 在本機執行。');
+  worker.postMessage({
+    code: analysisCode(button),
+    filename: columns.querySelector('[onclick="downloadAnalysisData(this)"]').dataset.filename,
+    csv: data.textContent
+  });
+}
