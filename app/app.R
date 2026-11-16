@@ -1,6 +1,7 @@
 library(shiny)
 # JSON uses explicit namespace to avoid masking shiny::validate.
 source('stats.R',encoding='UTF-8',local=TRUE)
+source('code_examples.R',encoding='UTF-8',local=TRUE)
 d<-jsonlite::fromJSON('data/summary.json',simplifyVector=FALSE)
 examples<-jsonlite::fromJSON('data/textbook.json',simplifyVector=FALSE)
 z_names<-unlist(d$zodiacNames)
@@ -61,6 +62,13 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
    column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。')))),
   conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
+ tabPanel('R／Python 語法',
+  card(h3('分析語法與結果'),
+   p('使用「課本範例」或「星座範例」目前的設定。Python 的區間估計與檢定需安裝 SciPy。'),
+   div(class='code-controls',
+    selectInput('code_scope','分析來源',c('課本範例'='book','星座調查'='survey')),
+    selectInput('code_lang','語言',c('R'='r','Python'='python'))),
+   uiOutput('code_example'))),
  tabPanel('教材下載與說明',card(h3('語法、資料與教材'),p('完整 Shiny 原始碼與資料放在 GitHub，新專案可下載後在 RStudio 執行。'),
   a(class='btn btn-primary',href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','查看 GitHub 原始碼'),br(),br(),
   a(href='https://hawjeng.github.io/statistical-inference-lab/downloads/zodiac_ci_calculations.xlsx',target='_blank','四變數 Excel 計算檔 ↓'),br(),
@@ -85,7 +93,7 @@ server<-function(input,output,session) {
  observeEvent(input$example,{b<-book();updateCheckboxInput(session,'book_enable_test',value=FALSE);if(b$type=='mean'){updateNumericInput(session,'bmu',value=if(is.null(b$mu))NA else b$mu);updateNumericInput(session,'bsigma',value=b$sigma);updateSelectInput(session,'bm',selected=b$method);updateSelectInput(session,'bt',selected=b$tail)};updateNumericInput(session,'bn',value=if(b$type=='stratified')1000 else 10)},ignoreNULL=FALSE)
  output$book_question<-renderUI({b<-book();tagList(h4(b$title),if(b$type=='mean')note(if(isTRUE(b$estimationOnly))'原檔為區間估計，預設只顯示 CI。若要延伸檢定，須勾選並另外指定 μ₀。' else '先決定單尾或雙尾，再比較觀察差距與標準誤。'),if(grepl('研究生年齡',b$title))note('觀察資料：n=25、x̄=24、s≈2.5；檢定題 μ₀=23，依所附年齡檢定 Excel 公式；z 使用已知 σ=2。樣本平均數不是假設參考值。'),note('CI 固定雙側；由原始觀察值即時計算，與原檔先將標準誤四捨五入的答案可能略有差異。'))})
  book_test<-reactive({b<-book();req(b$type=='mean',input$ba,input$bsigma);validate(need(input$ba>=.001&&input$ba<=.2,'α 須介於 .001 與 .20'),need(input$bsigma>0,'σ 須大於 0'));mu<-NA_real_;if(book_testing()){validate(need(length(input$bmu)==1&&is.finite(input$bmu),'請依題意自行輸入假設參考值 μ₀；不能自動用樣本平均數代替。'));mu<-input$bmu};do.call(rbind,lapply(c('z','t'),function(m)mean_result(b$n,b$mean,b$sd,mu,input$bsigma,m,input$ba,if(book_testing())input$bt else 'two')))})
- output$book_result<-renderUI({input$resample;b<-book()
+ book_result<-reactive({input$resample;b<-book()
   if(b$type=='mean'){a<-book_test();r<-a[a$method==input$bm,];testing<-book_testing();tagList(div(class='population',paste0('n = ',r$n,'；x̄ = ',fmt(r$mean,4),if(grepl('投手',b$title))'；s ≈ 9' else paste0('；s = ',fmt(r$sd,4)),if(r$method=='z')paste0('；已知 σ = ',fmt(r$sigma,4)) else '；母體 σ 未知，以樣本 s 估計')),if(grepl('投手',b$title))note('原始 30 筆資料的 s = 8.998084，原題近似為 9；計算保留原始精度。'),if(testing)hypotheses(input$bt,input$bmu),
    h4('1　標準誤'),p(if(r$method=='z')'SE = σ/√n' else 'SE = s/√n',' = ',fmt(r$se,4)),h4('2　雙側信賴區間'),p(paste0(fmt((1-input$ba)*100,1),'% CI = x̄ ± ',fmt(r$ci_critical,4),' × SE = [',fmt(r$lower,4),', ',fmt(r$upper,4),'] ',b$unit)),
    if(testing)tagList(h4('3　觀察檢定量與決策'),p(paste0(r$method,'_obt = (x̄−μ₀)/SE = ',fmt(r$stat,4),'；p = ',p_fmt(r$p))),note('z_obt／t_obt 是觀察檢定量；zcv／tcv 是檢定臨界值。'),div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀')) else note('這是區間估計題，沒有指定 H₀，不計算觀察檢定量或 p-value。'),
@@ -94,6 +102,7 @@ server<-function(input,output,session) {
   }else if(b$type=='sampling'){ids<-unlist(b$ids);n<-as.integer(input$bn);validate(need(n>=1&&n<=length(ids),paste('樣本數須介於 1 與',length(ids))));k<-length(ids)/n;ss<-ids[floor(runif(1,0,k)+(0:(n-1))*k)+1];tagList(p('名冊 N = ',length(ids),'；抽樣 n = ',n,'；系統間距 N/n = ',fmt(k,2)),h4('簡單隨機抽樣'),p(paste(sample(ids,n),collapse='、')),h4('系統隨機抽樣'),p(paste(ss,collapse='、')),note('編號只用來辨識抽樣單位，不對學號的平均數作檢定。'))
   }else{st<-do.call(rbind,lapply(b$strata,as.data.frame));N<-sum(st$N);n<-as.integer(input$bn);validate(need(n>=1&&n<=N,'抽樣數須為正整數且不超過母體 N'));ex<-n*st$N/N;alloc<-floor(ex);left<-n-sum(alloc);if(left>0){ix<-order(ex-alloc,decreasing=TRUE)[seq_len(left)];alloc[ix]<-alloc[ix]+1};tagList(p('母體 N = ',N,'；指定樣本數 n = ',n),HTML(html_table(data.frame(分層=st$label,母體人數=st$N,比例=fmt(st$N/N,4),未取整=fmt(ex),配置樣本數=alloc))),note('最大餘數法使配置合計恰好為 n；與原檔逐層四捨五入的總數可能略有不同。'))}
  })
+ output$book_result<-renderUI(book_result())
  output$book_figure_title<-renderText(if(book()$type=='mean'&&!book_testing())'區間估計圖' else '檢定示意圖')
  output$book_diagram<-renderUI({b<-book();if(b$type!='mean')return(note('此範例用來示範抽樣配置或臨界值，未繪製單一樣本檢定圖。'));a<-book_test();r<-a[a$method==input$bm,];if(!book_testing())return(HTML(single_ci_svg(r,input$ba,b$unit)));div(style='max-width:850px;margin:auto',h4(paste0(input$bm,'-test')),diagram_ui(r,input$ba,input$bt,input$bm))})
  output$book_download<-renderUI({b<-book();a(href=paste0('https://hawjeng.github.io/statistical-inference-lab/',b$file),target='_blank',class='btn btn-default','下載對應 Excel 原檔 ↓')})
@@ -232,6 +241,47 @@ server<-function(input,output,session) {
   a<-all_results()
   tab<-cbind(星座=z_labels[a$z+1L],result_table(a))
   HTML(html_table(tab,a$reject %in% TRUE))
+ })
+ output$code_example<-renderUI({
+  req(input$code_scope,input$code_lang)
+  if(input$code_scope=='book'){
+   b<-book()
+   title<-b$title
+   if(b$type=='mean'){
+    a<-book_test()
+    a<-a[a$method==input$bm,]
+    scripts<-inference_scripts(a,input$ba,if(book_testing())input$bt else 'two',values=unlist(b$values))
+    result<-HTML(html_table(result_table(a),a$reject %in% TRUE))
+   }else{
+    result<-book_result()
+    scripts<-book_exercise_scripts(b,as.integer(input$bn),input$ba)
+    if(b$type=='sampling')result<-tagList(note('重新執行語法會重新隨機抽樣。'),result)
+   }
+  }else{
+   a<-selected_results()
+   id<-selected_id()
+   successes<-NULL
+   if(input$kind=='category'){
+    m<-counts();j<-as.integer(input$event)
+    successes<-if(id==0L)sum(m[,j]) else m[id,j]
+    variable<-paste0(category_data()$label,'｜',category_data()$categories[[j]])
+   }else variable<-d$numeric[[input$variable]]$label
+   title<-paste(z_labels[id+1L],variable,sep='｜')
+   scripts<-inference_scripts(a,alpha(),input$tail,successes)
+   result<-HTML(html_table(result_table(a),a$reject %in% TRUE))
+  }
+  ext<-if(input$code_lang=='r')'R' else 'py'
+  language<-if(input$code_lang=='r')'R' else 'Python'
+  code<-scripts[[input$code_lang]]
+  filename<-paste0(input$code_scope,'-analysis.',ext)
+  tagList(h4(title),
+   div(class='code-columns',
+    div(h5(paste('可執行的',language,'語法')),
+     div(class='code-actions',
+      tags$button(type='button',class='btn btn-primary',onclick='copyAnalysisCode(this)',paste('複製',language,'語法')),
+      tags$button(type='button',class='btn btn-default',onclick='downloadAnalysisCode(this)',`data-filename`=filename,paste0('下載 .',ext))),
+     tags$pre(class='analysis-code',tags$code(code))),
+    div(h5('分析結果'),result)))
  })
  observeEvent(input$save_csv,{
   a<-all_results()
