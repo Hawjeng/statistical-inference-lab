@@ -24,21 +24,32 @@ function downloadAnalysisData(button) {
 function runAnalysisPython(button) {
   const columns = button.closest('.code-columns');
   const output = columns.querySelector('.python-console');
+  const help = columns.querySelector('.python-help');
   const data = columns.querySelector('.analysis-data');
 
   button.disabled = true;
-  output.textContent = '正在載入 Python 並執行語法…';
-  const worker = new Worker('python-console.js', { type: 'module' });
-  function finish(message) {
+  help.hidden = true;
+  output.textContent = '正在載入 Python 並執行語法。首次下載可能需要一點時間。';
+  let worker;
+  let timeout;
+  function finish(message, failed) {
+    clearTimeout(timeout);
+    worker?.terminate();
     output.textContent = message;
+    help.hidden = !failed;
     button.disabled = false;
-    worker.terminate();
   }
-  worker.onmessage = ({ data }) => finish(data);
-  worker.onerror = () => finish('Python 執行環境載入失敗。可下載語法與 CSV 在本機執行。');
-  worker.postMessage({
-    code: analysisCode(button),
-    filename: columns.querySelector('[onclick="downloadAnalysisData(this)"]').dataset.filename,
-    csv: data.textContent
-  });
+  try {
+    worker = new Worker('python-console.js', { type: 'module' });
+    worker.onmessage = ({ data }) => finish(data.output, !data.ok);
+    worker.onerror = () => finish('瀏覽器無法啟動 Python 執行環境。', true);
+    timeout = setTimeout(() => finish('Python 執行環境載入逾時。', true), 120000);
+    worker.postMessage({
+      code: analysisCode(button),
+      filename: columns.querySelector('[onclick="downloadAnalysisData(this)"]').dataset.filename,
+      csv: data.textContent
+    });
+  } catch (error) {
+    finish('瀏覽器無法啟動 Python 執行環境。\n' + error.message, true);
+  }
 }
