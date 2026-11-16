@@ -66,8 +66,8 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
      pop<-d$numeric[[key]]
      condition<-sprintf("input.kind == 'numeric' && input.variable == '%s'",key)
      tagList(
-      conditionalPanel(condition,numericInput(paste0('survey_mu_',key),'母體平均數 μ₀',pop$mu,step='any')),
-      conditionalPanel(condition,numericInput(paste0('survey_sigma_',key),'母體標準差 σ',pop$sigma,step='any')))
+      conditionalPanel(condition,numericInput(paste0('survey_mu_',key),'母體平均數 μ₀',round(pop$mu,4),step='any')),
+      conditionalPanel(condition,numericInput(paste0('survey_sigma_',key),'母體標準差 σ',round(pop$sigma,4),step='any')))
     })),
    uiOutput('population'),uiOutput('scope_note')),
   fluidRow(column(4,
@@ -160,8 +160,8 @@ server<-function(input,output,session) {
   pop<-d$numeric[[key]];req(pop)
   mu<-input[[paste0('survey_mu_',key)]]
   sigma<-input[[paste0('survey_sigma_',key)]]
-  if(is.null(mu))mu<-pop$mu
-  if(is.null(sigma))sigma<-pop$sigma
+  if(is.null(mu)||isTRUE(mu==round(pop$mu,4)))mu<-pop$mu
+  if(is.null(sigma)||isTRUE(sigma==round(pop$sigma,4)))sigma<-pop$sigma
   validate(need(is.finite(mu),'請輸入有效的母體平均數 μ₀。'),
    need(is.finite(sigma)&&sigma>0,'母體標準差 σ 必須大於 0。'))
   list(mu=mu,sigma=sigma)
