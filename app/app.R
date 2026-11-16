@@ -201,6 +201,8 @@ server<-function(input,output,session) {
   a<-selected_results()
   selected<-selected_id()
   al<-alpha()
+  variable<-if(input$kind=='category')category_data()$label else d$numeric[[input$variable]]$label
+  sample_heading<-h4(class='survey-sample-heading',strong(z_labels[selected+1L]),span(paste0('｜',variable)))
   if(input$kind=='category'){
    event<-as.integer(input$event)
    successes<-if(selected==0L)sum(counts()[,event]) else counts()[selected,event]
@@ -211,7 +213,8 @@ server<-function(input,output,session) {
    ci_se<-fmt(a$ci_se,4)
    return(card(
     h3(paste0(fmt((1-al)*100,1),'% 雙側比例信賴區間')),
-    p(paste0(z_labels[selected+1L],'｜成功事件：',event_label)),
+    sample_heading,
+    p(paste0('成功事件：',event_label)),
     p(paste0('p̂ = x/n = ',successes,'/',n,' = ',phat)),
     p(paste0('α/2 = ',fmt(al/2,4),'｜zcv = ',zcv)),
     p('SE = √[p̂(1 − p̂)/n]'),
@@ -224,7 +227,8 @@ server<-function(input,output,session) {
   }
   card(
    h3(paste0(fmt((1-al)*100,1),'% 雙側信賴區間計算')),
-   p(paste0(z_labels[selected+1L],'｜n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),
+   sample_heading,
+   p(paste0('n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),
    p(paste0('α = ',fmt(al,3),'｜每尾 α/2 = ',fmt(al/2,4))),
    lapply(seq_len(nrow(a)),function(i){
     r<-a[i,]
