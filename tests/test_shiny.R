@@ -12,6 +12,9 @@ testServer(app,session=mock,{
  stopifnot(abs(book_test()$stat[1]+4.2857142857)<1e-8)
  a<-results();stopifnot(nrow(a)==24,abs(a$p[2]-.04338376718)<1e-8)
  h<-output$survey_chart;stopifnot(grepl('μ',h$html),!grepl('母體位置刻度',h$html,fixed=TRUE),grepl('1. 水瓶座',h$html,fixed=TRUE))
+ steps<-output$survey_result$html
+ stopifnot(grepl('SE = σ / √n',steps,fixed=TRUE),grepl('SE = s / √n',steps,fixed=TRUE),
+  grepl('df = n − 1 = 78 − 1 = 77',steps,fixed=TRUE),grepl('2 × P(T(77)',steps,fixed=TRUE))
  ci0<-a[,c('lower','upper')];session$setInputs(tail='left');session$flushReact();stopifnot(identical(ci0,results()[,c('lower','upper')]))
  stopifnot(grepl('H₀：μ ≥',output$survey_diagram$html,fixed=TRUE),grepl('z-test',output$survey_diagram$html,fixed=TRUE),grepl('t-test',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(tail='right');session$flushReact();stopifnot(grepl('H₀：μ ≤',output$survey_diagram$html,fixed=TRUE))

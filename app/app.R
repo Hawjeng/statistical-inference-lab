@@ -279,8 +279,27 @@ server<-function(input,output,session) {
    hypotheses(input$tail,a$mu[1],param),
    lapply(seq_len(nrow(a)),function(i){
     r<-a[i,]
-    div(class='result-block',h4(paste0(r$method,'_obt（',r$method,'-statistic）')),
-     p('假設檢定標準誤 = ',fmt(r$se,4),'；',r$method,'_obt = ',fmt(r$stat,4),'；p = ',p_fmt(r$p)),
+    statistic<-paste0(r$method,'_obt')
+    steps<-if(input$kind=='numeric'){
+     is_t<-r$method=='t'
+     spread<-if(is_t)r$sd else r$sigma
+     spread_symbol<-if(is_t)'s' else 'σ'
+     distribution<-if(is_t)paste0('T(',r$df,')') else 'Z'
+     observed<-fmt(r$stat,4)
+     probability<-switch(input$tail,
+      two=paste0('2 × P(',distribution,' ≥ ',fmt(abs(r$stat),4),')'),
+      left=paste0('P(',distribution,' ≤ ',observed,')'),
+      right=paste0('P(',distribution,' ≥ ',observed,')'))
+     tagList(
+      p(paste0('SE = ',spread_symbol,' / √n = ',fmt(spread,4),' / √',r$n,' = ',fmt(r$se,4))),
+      if(is_t)p(paste0('df = n − 1 = ',r$n,' − 1 = ',r$df)),
+      p(paste0(statistic,' = (x̄ − μ₀) / SE')),
+      p(paste0('= (',fmt(r$mean,4),' − ',fmt(r$mu,4),') / ',fmt(r$se,4),' = ',observed)),
+      p(paste0('p = ',probability,if(r$p<.0001)' ' else ' = ',p_fmt(r$p))),
+      p(paste0('p ',if(r$reject)'<' else '≥',' α = ',fmt(alpha(),3))))
+    }else p('假設檢定標準誤 = ',fmt(r$se,4),'；',statistic,' = ',fmt(r$stat,4),'；p = ',p_fmt(r$p))
+    div(class='result-block',h4(paste0(statistic,'（',r$method,'-statistic）')),
+     steps,
      div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'))
    }),
    if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。')
