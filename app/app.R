@@ -368,7 +368,11 @@ server<-function(input,output,session) {
     on.exit(close(con))
     utils::read.csv(con,...)
    }
-   tags$pre(class='analysis-code analysis-console',paste(capture.output(eval(parse(text=files$code),runner)),collapse='\n'))
+   script<-textConnection(files$code,encoding='UTF-8')
+   on.exit(close(script),add=TRUE)
+   transcript<-capture.output(source(script,local=runner,echo=TRUE,print.eval=TRUE,
+    prompt.echo='> ',continue.echo='+ ',max.deparse.length=Inf))
+   tags$pre(class='analysis-code analysis-console',paste(transcript,collapse='\n'))
   }else tagList(
    tags$button(type='button',class='btn btn-default',onclick='runAnalysisPython(this)','執行 Python'),
    tags$pre(class='analysis-code analysis-console python-console',role='status','執行後會顯示原始輸出。'),
