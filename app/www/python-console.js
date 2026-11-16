@@ -1,7 +1,7 @@
 const indexURL = 'https://cdn.jsdelivr.net/pyodide/v314.0.8/full/';
 self.onmessage = async ({ data }) => {
   try {
-    importScripts(indexURL + 'pyodide.js');
+    const { loadPyodide } = await import(indexURL + 'pyodide.mjs');
     const runtime = await loadPyodide({ indexURL });
     await runtime.loadPackagesFromImports(data.code);
     runtime.FS.writeFile(data.filename, data.csv, { encoding: 'utf8' });

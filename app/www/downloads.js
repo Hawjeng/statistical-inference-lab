@@ -28,7 +28,7 @@ function runAnalysisPython(button) {
 
   button.disabled = true;
   output.textContent = '正在載入 Python 並執行語法…';
-  const worker = new Worker('python-console.js');
+  const worker = new Worker('python-console.js', { type: 'module' });
   function finish(message) {
     output.textContent = message;
     button.disabled = false;

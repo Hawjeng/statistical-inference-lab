@@ -8,3 +8,5 @@ body{font-family:"Microsoft JhengHei","PingFang TC",Arial,sans-serif;color:#183d
 .lab-card .survey-sample-heading{margin:0 0 10px;line-height:1.4}.survey-sample-heading strong{font-size:22px}
 
 .survey-details>summary{padding:0;background:transparent;color:inherit;font-size:22px;font-weight:500}.survey-details[open]>summary{margin-bottom:16px}
+
+.survey-details>summary{display:flex;align-items:baseline;justify-content:space-between;gap:12px;cursor:pointer;list-style:none}.survey-details>summary::-webkit-details-marker{display:none}.survey-toggle{flex:none;font-size:14px;color:#275365}.survey-toggle::after{content:"展開 ▸"}.survey-details[open] .survey-toggle::after{content:"收合 ▾"}
