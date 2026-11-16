@@ -38,9 +38,10 @@ ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
  pair<-length(unique(a$method))>1
  step<-if(pair)104 else 80
  first_y<-72
- grid_bottom<-first_y+12*step-22
+ groups<-unique(a$z)
+ grid_bottom<-first_y+length(groups)*step-22
  H<-grid_bottom+if(prop)96 else 44
- out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 %s" role="img" aria-label="各星座雙側信賴區間" style="width:100%%;min-width:740px;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="960" height="%s" fill="white"/>',H,H))
+ out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 %s" role="img" aria-label="雙側信賴區間" style="width:100%%;min-width:740px;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="960" height="%s" fill="white"/>',H,H))
  if(prop){
   ticks<-pretty(rg,n=5)
   labs<-paste0(round(ticks*100),'%')
@@ -51,8 +52,8 @@ ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
  }
  for(j in seq_along(ticks))if(ticks[j]>=rg[1]&&ticks[j]<=rg[2])out<-c(out,sprintf('<path d="M%.2f 42 V%s" stroke="#e2e8f0"/>',X(ticks[j]),grid_bottom),svg_text(X(ticks[j]),grid_bottom+25,labs[j],size=18))
  out<-c(out,sprintf('<path d="M%.2f 42 V%s" stroke="black" stroke-width="1.7"/>',X(ref),grid_bottom),svg_text(X(ref),26,paste(if(prop)'p₀ =' else 'μ =',fmt(ref,4)),'#000',20))
- for(i in 1:12){r<-a[a$z==i,];y<-first_y+(i-1)*step
-  out<-c(out,sprintf('<g><rect x="0" y="%s" width="950" height="%s" rx="5" fill="%s"/>',y-22,step-6,if(i==selected)'#f0f7fa' else 'transparent'),svg_text(12,y+13,paste0(i,'. ',names_z[i]),size=22,anchor='start'),svg_text(12,y+38,paste('n =',r$n[1]),'#536c76',17,'start'))
+ for(j in seq_along(groups)){i<-groups[j];r<-a[a$z==i,];y<-first_y+(j-1)*step
+  out<-c(out,sprintf('<g><rect x="0" y="%s" width="950" height="%s" rx="5" fill="%s"/>',y-22,step-6,if(i==selected)'#f0f7fa' else 'transparent'),svg_text(12,y+13,names_z[i+1L],size=22,anchor='start'),svg_text(12,y+38,paste('n =',r$n[1]),'#536c76',17,'start'))
   for(j in seq_len(nrow(r))){b<-r[j,];yy<-y+(j-1)*32;col<-if(b$excluded)'#c32d3b' else if(b$method=='z')'#2563eb' else '#087b92';l<-X(b$lower);u<-X(b$upper);m<-X(b$mean)
    out<-c(out,sprintf('<path d="M%.2f %s H%.2f" stroke="%s" stroke-width="2.5" %s/><path d="M%.2f %s V%s M%.2f %s V%s" stroke="%s" stroke-width="2"/>',l,yy,u,col,if(b$method=='t')'stroke-dasharray="6 4"' else '',l,yy-4,yy+4,u,yy-4,yy+4,col),
     if(b$method=='z')sprintf('<circle cx="%.2f" cy="%s" r="3.5" fill="%s"/>',m,yy,col) else sprintf('<polygon points="%.2f,%s %.2f,%s %.2f,%s %.2f,%s" fill="%s"/>',m,yy-4,m+4,yy,m,yy+4,m-4,yy,col),

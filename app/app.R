@@ -4,6 +4,7 @@ source('stats.R',encoding='UTF-8',local=TRUE)
 d<-jsonlite::fromJSON('data/summary.json',simplifyVector=FALSE)
 examples<-jsonlite::fromJSON('data/textbook.json',simplifyVector=FALSE)
 z_names<-unlist(d$zodiacNames)
+z_labels<-c('全體樣本',paste0(seq_along(z_names),'. ',z_names))
 choice_labels<-function(x)setNames(names(x),vapply(x,function(a)a$label,character(1)))
 example_choices<-setNames(vapply(examples,function(a)a$id,character(1)),vapply(examples,function(a)a$title,character(1)))
 # Native selects work consistently on desktop, mobile and WebR.
@@ -20,7 +21,7 @@ hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H�
 result_table<-function(a) {
  data.frame(方法=a$method,n=a$n,平均數=fmt(a$mean,4),信賴區間標準誤=fmt(a$ci_se,4),CI下限=fmt(a$lower,4),CI上限=fmt(a$upper,4),
   假設檢定標準誤=fmt(a$se,4),
-  `觀察檢定量（z_obt／t_obt）`=fmt(a$stat,4),df=ifelse(is.na(a$df),'—',a$df),臨界值=fmt(a$critical,4),p值=p_fmt(a$p),結論=ifelse(a$reject,'拒絕 H₀','保留 H₀'),check.names=FALSE)
+  `觀察檢定量（z_obt／t_obt）`=fmt(a$stat,4),df=ifelse(is.na(a$df),'—',a$df),臨界值=fmt(a$critical,4),p值=ifelse(is.na(a$p),'—',p_fmt(a$p)),結論=ifelse(is.na(a$reject),'—',ifelse(a$reject,'拒絕 H₀','保留 H₀')),check.names=FALSE)
 }
 ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css'),tags$script(src='downloads.js'),
  tags$script(HTML("function reportHeight(){parent.postMessage({type:'inference-height',height:document.documentElement.scrollHeight},location.origin)};new ResizeObserver(reportHeight).observe(document.documentElement);setInterval(reportHeight,1500);"))),
@@ -44,15 +45,17 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
   card(h3(textOutput('book_figure_title',inline=TRUE)),uiOutput('book_diagram'),note('CI 一律保持雙側 (1−α) 區間。未指定 μ₀ 的估計題不顯示觀察檢定量或 p-value。'))),
  tabPanel('星座範例',
   card(h3('各星座的估計與檢定'),
-   fluidRow(column(6,selectInput('kind','變數類型',c('數值變數（平均數）'='numeric','類別／二分變數'='category'),selected='category')),
-    column(6,selectInput('variable','分析變數',choice_labels(d$categorical),selected='PhoneBrand'))),
-   fluidRow(column(3,numericInput('alpha','顯著水準 α',.05,min=.001,max=.2,step=.001)),column(3,selectInput('zodiac','選擇星座',setNames(as.character(1:12),paste0(1:12,'. ',z_names)))),
-    column(3,selectInput('tail','檢定方向',tails)),column(3,conditionalPanel("input.kind == 'numeric'",note('檢定圖：左 z-test、右 t-test')))),
-   conditionalPanel("input.kind == 'category'",fluidRow(column(6,uiOutput('category_choice')))),
+   div(class='survey-inputs survey-sample',selectInput('zodiac','選擇星座',setNames(0:12,z_labels),selected='0')),
+   div(class='survey-inputs',
+    selectInput('kind','變數類型',c('連續變數'='numeric','類別／二分變數'='category'),selected='numeric'),
+    selectInput('variable','分析變數',choice_labels(d$numeric),selected='CT'),
+    numericInput('alpha','顯著水準 α',.05,min=.001,max=.2,step=.001),
+    conditionalPanel("input.zodiac != '0'",selectInput('tail','檢定方向',tails)),
+    conditionalPanel("input.kind == 'category'",uiOutput('category_choice'))),
    uiOutput('population'),uiOutput('scope_note')),
-  fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG'))),
+  fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',TRUE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG'))),
    column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。')))),
-  card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。')),
+  conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('教材下載與說明',card(h3('語法、資料與教材'),p('完整 Shiny 原始碼與資料放在 GitHub，新專案可下載後在 RStudio 執行。'),
   a(class='btn btn-primary',href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','查看 GitHub 原始碼'),br(),br(),
@@ -94,10 +97,26 @@ server<-function(input,output,session) {
  category_data<-reactive({req(input$kind=='category',d$categorical[[input$variable]]);d$categorical[[input$variable]]})
  output$category_choice<-renderUI({a<-category_data();selectInput('event','指定成功事件',setNames(as.character(seq_along(a$categories)),unlist(a$categories)))})
  counts<-reactive({a<-category_data();do.call(rbind,lapply(a$counts,unlist))})
- results<-reactive({al<-alpha();z<-as.integer(input$zodiac)
+ results<-reactive({al<-alpha()
   if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);do.call(rbind,lapply(seq_along(pop$groups),function(i){g<-pop$groups[[i]];a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(g$n,g$mean,g$sd,pop$mu,pop$sigma,m,al,input$tail)));a$z<-i;a}))
   }else{req(input$event);m<-counts();j<-as.integer(input$event);req(j %in% seq_len(ncol(m)));p0<-sum(m[,j])/sum(m);do.call(rbind,lapply(1:12,function(i){a<-prop_result(m[i,j],sum(m[i,]),p0,al,input$tail);a$z<-i;a}))}
  })
+ pooled_results<-reactive({
+  al<-alpha()
+  if(input$kind=='numeric'){
+   pop<-d$numeric[[input$variable]];req(pop)
+   s<-pop$sigma*sqrt(pop$N/(pop$N-1))
+   a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(pop$N,pop$mu,s,pop$mu,pop$sigma,m,al,'two')))
+  }else{
+   m<-counts();req(input$event);j<-as.integer(input$event);req(j %in% seq_len(ncol(m)))
+   x<-sum(m[,j]);n<-sum(m)
+   a<-prop_result(x,n,x/n,al,'two')
+  }
+  a[c('se','critical','stat','p','reject')]<-NA
+  a$z<-0L
+  a
+ })
+ all_results<-reactive(rbind(pooled_results(),results()))
  output$population<-renderUI({
   if(input$kind=='numeric'){
    pop<-d$numeric[[input$variable]];req(pop)
@@ -122,19 +141,24 @@ server<-function(input,output,session) {
    if(numeric)'黑色實線：μ' else '黑色實線：p₀',
    span(style='color:#c32d3b','紅色：CI 未涵蓋參考值'))
  })
- output$survey_chart<-renderUI(HTML(ci_svg(results(),z_names,input$kind=='category',as.integer(input$zodiac))))
+ selected_id<-reactive({req(input$zodiac);as.integer(input$zodiac)})
  selected_results<-reactive({
-  req(input$zodiac)
+  id<-selected_id()
+  if(id==0L)return(pooled_results())
   a<-results()
-  a[a$z==as.integer(input$zodiac),]
+  a[a$z==id,]
+ })
+ output$survey_chart<-renderUI({
+  a<-if(isTRUE(input$show_all_groups))all_results() else selected_results()
+  HTML(ci_svg(a,z_labels,input$kind=='category',selected_id()))
  })
  output$survey_ci_steps<-renderUI({
   a<-selected_results()
-  selected<-as.integer(input$zodiac)
+  selected<-selected_id()
   al<-alpha()
   if(input$kind=='category'){
    event<-as.integer(input$event)
-   successes<-counts()[selected,event]
+   successes<-if(selected==0L)sum(counts()[,event]) else counts()[selected,event]
    event_label<-category_data()$categories[[event]]
    n<-a$n
    phat<-fmt(a$mean,4)
@@ -142,7 +166,7 @@ server<-function(input,output,session) {
    ci_se<-fmt(a$ci_se,4)
    return(card(
     h3(paste0(fmt((1-al)*100,1),'% 雙側比例信賴區間')),
-    p(paste0(selected,'. ',z_names[selected],'｜成功事件：',event_label)),
+    p(paste0(z_labels[selected+1L],'｜成功事件：',event_label)),
     p(paste0('p̂ = x/n = ',successes,'/',n,' = ',phat)),
     p(paste0('α/2 = ',fmt(al/2,4),'｜zcv = ',zcv)),
     p('SE = √[p̂(1 − p̂)/n]'),
@@ -155,7 +179,7 @@ server<-function(input,output,session) {
   }
   card(
    h3(paste0(fmt((1-al)*100,1),'% 雙側信賴區間計算')),
-   p(paste0(selected,'. ',z_names[selected],'｜n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),
+   p(paste0(z_labels[selected+1L],'｜n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),
    p(paste0('α = ',fmt(al,3),'｜每尾 α/2 = ',fmt(al/2,4))),
    lapply(seq_len(nrow(a)),function(i){
     r<-a[i,]
@@ -167,9 +191,9 @@ server<-function(input,output,session) {
     div(class='result-block',
      h4(if(is_z)'z 信賴區間' else 't 信賴區間'),
      p(paste0(cv_label,' = ',fmt(r$ci_critical,4),df_detail)),
-     p(paste0('SE = ',spread_label,'/√n = ',fmt(spread,4),'/√',r$n,' = ',fmt(r$se,4))),
+     p(paste0('SE = ',spread_label,'/√n = ',fmt(spread,4),'/√',r$n,' = ',fmt(r$ci_se,4))),
      p(paste0('CI = x̄ ± ',if(is_z)'zcv' else 'tcv(df)',' × SE')),
-     p(paste0('= ',fmt(r$mean,4),' ± ',fmt(r$ci_critical,4),' × ',fmt(r$se,4),
+     p(paste0('= ',fmt(r$mean,4),' ± ',fmt(r$ci_critical,4),' × ',fmt(r$ci_se,4),
       ' = [',fmt(r$lower,4),', ',fmt(r$upper,4),']'))
     )
    }),
@@ -177,8 +201,9 @@ server<-function(input,output,session) {
   )
  })
  output$survey_result<-renderUI({
+  if(selected_id()==0L)return(note('全體樣本提供估計值與信賴區間，並作為各星座檢定的參考。'))
   a<-selected_results()
-  zodiac_name<-z_names[as.integer(input$zodiac)]
+  zodiac_name<-z_names[selected_id()]
   param<-paste0(if(input$kind=='numeric')'μ' else 'π',zodiac_name)
   tagList(
    h4(paste0(input$zodiac,'. ',zodiac_name)),
@@ -193,19 +218,20 @@ server<-function(input,output,session) {
   )
  })
  output$survey_diagram<-renderUI({
+  if(selected_id()==0L)return(NULL)
   a<-selected_results()
   al<-alpha()
   if(input$kind=='numeric')comparison_ui(a,al,input$tail)
   else diagram_ui(a,al,input$tail,'z',h0=null_label(input$tail,a$mu,'π'))
  })
  output$survey_table<-renderUI({
-  a<-results()
-  tab<-cbind(星座=paste0(a$z,'. ',z_names[a$z]),result_table(a))
-  HTML(html_table(tab,a$reject))
+  a<-all_results()
+  tab<-cbind(星座=z_labels[a$z+1L],result_table(a))
+  HTML(html_table(tab,a$reject %in% TRUE))
  })
  observeEvent(input$save_csv,{
-  a<-results()
-  tab<-cbind(星座=paste0(a$z,'. ',z_names[a$z]),a)
+  a<-all_results()
+  tab<-cbind(星座=z_labels[a$z+1L],a)
   names(tab)[match(c('ci_se','se'),names(tab))]<-c('信賴區間標準誤','假設檢定標準誤')
   lines<-capture.output(write.csv(tab,row.names=FALSE))
   session$sendCustomMessage('download-file',list(name=paste0(input$variable,'-results.csv'),mime='text/csv;charset=utf-8',content=paste0('\ufeff',paste(lines,collapse='\r\n'))))
