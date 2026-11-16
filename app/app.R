@@ -368,10 +368,10 @@ server<-function(input,output,session) {
     on.exit(close(con))
     utils::read.csv(con,...)
    }
-   tags$pre(class='analysis-code',paste(capture.output(eval(parse(text=files$code),runner)),collapse='\n'))
+   tags$pre(class='analysis-code analysis-console',paste(capture.output(eval(parse(text=files$code),runner)),collapse='\n'))
   }else tagList(
    tags$button(type='button',class='btn btn-default',onclick='runAnalysisPython(this)','執行 Python'),
-   tags$pre(class='analysis-code python-console',role='status','執行後會顯示原始輸出。'),
+   tags$pre(class='analysis-code analysis-console python-console',role='status','執行後會顯示原始輸出。'),
    div(class='python-help',hidden=NA,
     p('若錯誤出現在載入階段，請重新整理教材後再試。也可換用新版 Chrome、Edge 或 Safari，或切換到能連線至 cdn.jsdelivr.net 的網路。'),
     p('若仍無法執行，請下載 Python 語法與 CSV，放在同一個資料夾。需要 SciPy 的題目，先在該資料夾的終端機安裝套件，再執行下列指令。'),
