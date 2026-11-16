@@ -15,6 +15,12 @@ testServer(app,session=mock,{
  ci0<-a[,c('lower','upper')];session$setInputs(tail='left');session$flushReact();stopifnot(identical(ci0,results()[,c('lower','upper')]))
  stopifnot(grepl('H₀：μ ≥',output$survey_diagram$html,fixed=TRUE),grepl('z-test',output$survey_diagram$html,fixed=TRUE),grepl('t-test',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(tail='right');session$flushReact();stopifnot(grepl('H₀：μ ≤',output$survey_diagram$html,fixed=TRUE))
+ session$setInputs(survey_mu_B5=d$numeric$B5$mu+1,survey_sigma_B5=2*d$numeric$B5$sigma)
+ custom<-selected_results()
+ stopifnot(all(custom$mu==a$mu[1]+1),isTRUE(all.equal(custom$ci_se,c(2*a$ci_se[1],a$ci_se[2]))),
+  all(pooled_results()$mean==d$numeric$B5$mu),all(is.na(pooled_results()$p)))
+ session$setInputs(variable='CT')
+ stopifnot(survey_reference()$mu==d$numeric$CT$mu,survey_reference()$sigma==d$numeric$CT$sigma)
  session$setInputs(kind='category',variable='PhoneBrand',event='1');session$flushReact()
  stopifnot(ncol(counts())==2,sum(counts())==706,nrow(results())==12)
  aries<-results()[3,]

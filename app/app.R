@@ -54,13 +54,21 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
   card(h3(textOutput('book_figure_title',inline=TRUE)),uiOutput('book_diagram'),note('CI 一律保持雙側 (1−α) 區間。未指定 μ₀ 的估計題不顯示觀察檢定量或 p-value。'))),
  tabPanel('星座範例',
   card(h3('各星座的估計與檢定'),
-   div(class='survey-inputs survey-sample',selectInput('zodiac','選擇星座',setNames(0:12,z_labels),selected='0')),
    div(class='survey-inputs',
+    selectInput('zodiac','選擇星座',setNames(0:12,z_labels),selected='0'),
     selectInput('kind','變數類型',c('連續變數'='numeric','類別／二分變數'='category'),selected='numeric'),
-    selectInput('variable','分析變數',choice_labels(d$numeric),selected='CT'),
+    selectInput('variable','分析變數',choice_labels(d$numeric),selected='CT')),
+   div(class='survey-inputs',
     numericInput('alpha','顯著水準 α',.05,min=.001,max=.2,step=.001),
     conditionalPanel("input.zodiac != '0'",selectInput('tail','檢定方向',tails)),
-    conditionalPanel("input.kind == 'category'",uiOutput('category_choice'))),
+    conditionalPanel("input.kind == 'category'",uiOutput('category_choice')),
+    lapply(names(d$numeric),function(key){
+     pop<-d$numeric[[key]]
+     condition<-sprintf("input.kind == 'numeric' && input.variable == '%s'",key)
+     tagList(
+      conditionalPanel(condition,numericInput(paste0('survey_mu_',key),'母體平均數 μ₀',pop$mu,step='any')),
+      conditionalPanel(condition,numericInput(paste0('survey_sigma_',key),'母體標準差 σ',pop$sigma,step='any')))
+    })),
    uiOutput('population'),uiOutput('scope_note')),
   fluidRow(column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。'))),
    column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
@@ -142,16 +150,28 @@ server<-function(input,output,session) {
  output$category_choice<-renderUI({a<-category_data();selectInput('event','指定成功事件',setNames(as.character(seq_along(a$categories)),unlist(a$categories)))})
  outputOptions(output,'category_choice',suspendWhenHidden=FALSE)
  counts<-reactive({a<-category_data();do.call(rbind,lapply(a$counts,unlist))})
+ survey_reference<-reactive({
+  key<-input$variable
+  pop<-d$numeric[[key]];req(pop)
+  mu<-input[[paste0('survey_mu_',key)]]
+  sigma<-input[[paste0('survey_sigma_',key)]]
+  if(is.null(mu))mu<-pop$mu
+  if(is.null(sigma))sigma<-pop$sigma
+  validate(need(is.finite(mu),'請輸入有效的母體平均數 μ₀。'),
+   need(is.finite(sigma)&&sigma>0,'母體標準差 σ 必須大於 0。'))
+  list(mu=mu,sigma=sigma)
+ })
  results<-reactive({al<-alpha()
-  if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);do.call(rbind,lapply(seq_along(pop$groups),function(i){g<-pop$groups[[i]];a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(g$n,g$mean,g$sd,pop$mu,pop$sigma,m,al,input$tail)));a$z<-i;a}))
+  if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);ref<-survey_reference();do.call(rbind,lapply(seq_along(pop$groups),function(i){g<-pop$groups[[i]];a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(g$n,g$mean,g$sd,ref$mu,ref$sigma,m,al,input$tail)));a$z<-i;a}))
   }else{req(input$event);m<-counts();j<-as.integer(input$event);req(j %in% seq_len(ncol(m)));p0<-sum(m[,j])/sum(m);do.call(rbind,lapply(1:12,function(i){a<-prop_result(m[i,j],sum(m[i,]),p0,al,input$tail);a$z<-i;a}))}
  })
  pooled_results<-reactive({
   al<-alpha()
   if(input$kind=='numeric'){
    pop<-d$numeric[[input$variable]];req(pop)
+   ref<-survey_reference()
    s<-pop$sigma*sqrt(pop$N/(pop$N-1))
-   a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(pop$N,pop$mu,s,pop$mu,pop$sigma,m,al,'two')))
+   a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(pop$N,pop$mu,s,ref$mu,ref$sigma,m,al,'two')))
   }else{
    m<-counts();req(input$event);j<-as.integer(input$event);req(j %in% seq_len(ncol(m)))
    x<-sum(m[,j]);n<-sum(m)
@@ -176,7 +196,7 @@ server<-function(input,output,session) {
   }
  })
  output$scope_note<-renderUI({
-  if(input$kind=='numeric')note('逐一星座與全體參考值比較。CI 固定採雙側區間。只有雙尾檢定時，CI 涵蓋與檢定結論直接對應。')
+  if(input$kind=='numeric')note('μ₀ 與 σ 預設採用全體資料，可自行修改。z 法使用指定的 σ，t 法使用樣本標準差。CI 固定採雙側區間。')
   else note('比例 CI 固定採雙側區間，以樣本比例 p̂ 估計標準誤。單一比例 z 檢定以全體參考比例 p₀ 計算標準誤。')
  })
  output$chart_legend<-renderUI({
@@ -250,7 +270,7 @@ server<-function(input,output,session) {
   )
  })
  output$survey_result<-renderUI({
-  if(selected_id()==0L)return(note('全體樣本提供估計值與信賴區間，並作為各星座檢定的參考。'))
+  if(selected_id()==0L)return(note('全體樣本提供估計值與信賴區間。選擇個別星座即可檢定。'))
   a<-selected_results()
   zodiac_name<-z_names[selected_id()]
   param<-paste0(if(input$kind=='numeric')'μ' else 'π',zodiac_name)
