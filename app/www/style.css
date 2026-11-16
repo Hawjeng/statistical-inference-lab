@@ -6,3 +6,5 @@ body{font-family:"Microsoft JhengHei","PingFang TC",Arial,sans-serif;color:#183d
 .code-controls{display:flex;flex-wrap:wrap;gap:0 16px}.code-controls>.shiny-input-container{flex:0 1 170px;min-width:0}.code-controls>.shiny-input-container:has(#code_topic){flex-basis:420px}.code-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.code-columns h5{font-weight:700;margin-top:0}.code-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.analysis-code{max-height:460px;overflow:auto;white-space:pre;background:#f4f8f9;border-color:#d7e4e8}@media(max-width:767px){.code-columns{grid-template-columns:1fr}}
 
 .lab-card .survey-sample-heading{margin:0 0 10px;line-height:1.4}.survey-sample-heading strong{font-size:22px}
+
+.survey-details>summary{padding:0;background:transparent;color:inherit;font-size:22px;font-weight:500}.survey-details[open]>summary{margin-bottom:16px}

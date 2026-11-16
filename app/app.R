@@ -70,7 +70,12 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
       conditionalPanel(condition,numericInput(paste0('survey_sigma_',key),'母體標準差 σ',pop$sigma,step='any')))
     })),
    uiOutput('population'),uiOutput('scope_note')),
-  fluidRow(column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。'))),
+  fluidRow(column(4,
+    tags$details(class='lab-card survey-details',open=NA,
+     tags$summary(textOutput('survey_ci_title',inline=TRUE)),uiOutput('survey_ci_steps')),
+    tags$details(class='lab-card survey-details',open=NA,
+     tags$summary('假設、檢定與結論'),uiOutput('survey_result'),
+     note('保留 H₀ 表示未能拒絕，不表示證明相等。'))),
    column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
   conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
@@ -217,6 +222,9 @@ server<-function(input,output,session) {
   a<-if(isTRUE(input$show_all_groups))all_results() else selected_results()
   HTML(ci_svg(a,z_labels,input$kind=='category',selected_id()))
  })
+ output$survey_ci_title<-renderText({
+  paste0(fmt((1-alpha())*100,1),'% 雙側',if(input$kind=='category')'比例','信賴區間計算')
+ })
  output$survey_ci_steps<-renderUI({
   a<-selected_results()
   selected<-selected_id()
@@ -231,8 +239,7 @@ server<-function(input,output,session) {
    phat<-fmt(a$mean,4)
    zcv<-fmt(a$ci_critical,4)
    ci_se<-fmt(a$ci_se,4)
-   return(card(
-    h3(paste0(fmt((1-al)*100,1),'% 雙側比例信賴區間')),
+   return(tagList(
     sample_heading,
     p(paste0('成功事件：',event_label)),
     p(paste0('p̂ = x/n = ',successes,'/',n,' = ',phat)),
@@ -245,8 +252,7 @@ server<-function(input,output,session) {
     note('本區間採 Wald CI，端點以未四捨五入的數值計算。')
    ))
   }
-  card(
-   h3(paste0(fmt((1-al)*100,1),'% 雙側信賴區間計算')),
+  tagList(
    sample_heading,
    p(paste0('n = ',a$n[1],'｜x̄ = ',fmt(a$mean[1],4))),
    p(paste0('α = ',fmt(al,3),'｜每尾 α/2 = ',fmt(al/2,4))),
