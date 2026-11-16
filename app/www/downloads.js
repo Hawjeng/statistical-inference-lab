@@ -17,3 +17,7 @@ async function copyAnalysisCode(button) {
 function downloadAnalysisCode(button) {
   saveLocalFile(analysisCode(button) + '\n', button.dataset.filename, 'text/plain;charset=utf-8');
 }
+function downloadAnalysisData(button) {
+  const csv = button.closest('.code-columns').querySelector('.analysis-data').textContent;
+  saveLocalFile(csv + '\n', button.dataset.filename, 'text/csv;charset=utf-8');
+}

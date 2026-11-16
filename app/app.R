@@ -8,6 +8,10 @@ z_names<-unlist(d$zodiacNames)
 z_labels<-c('全體樣本',paste0(seq_along(z_names),'. ',z_names))
 choice_labels<-function(x)setNames(names(x),vapply(x,function(a)a$label,character(1)))
 example_choices<-setNames(vapply(examples,function(a)a$id,character(1)),vapply(examples,function(a)a$title,character(1)))
+code_choices<-list(
+ '課本範例'=setNames(paste0('book:',example_choices),names(example_choices)),
+ '星座調查・連續變數'=setNames(paste0('numeric:',names(d$numeric)),names(choice_labels(d$numeric))),
+ '星座調查・類別變數'=setNames(paste0('category:',names(d$categorical)),names(choice_labels(d$categorical))))
 # Native selects work consistently on desktop, mobile and WebR.
 selectInput<-function(...)shiny::selectInput(...,selectize=FALSE)
 tails<-c('雙尾 ≠'='two','左尾 <'='left','右尾 >'='right')
@@ -58,15 +62,15 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
     conditionalPanel("input.zodiac != '0'",selectInput('tail','檢定方向',tails)),
     conditionalPanel("input.kind == 'category'",uiOutput('category_choice'))),
    uiOutput('population'),uiOutput('scope_note')),
-  fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',TRUE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG'))),
+  fluidRow(column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG'))),
    column(4,uiOutput('survey_ci_steps'),card(h3('假設、檢定與結論'),uiOutput('survey_result'),note('保留 H₀ 表示未能拒絕，不表示證明相等。')))),
   conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('橘色：α 拒絕域；藍色：p-value 尾端面積。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('R／Python 語法',
   card(h3('分析語法與結果'),
-   p('使用「課本範例」或「星座範例」目前的設定。Python 的區間估計與檢定需安裝 SciPy。'),
+   p('可直接選擇課本題目或星座調查變數。顯著水準、星座等設定與分析分頁共用。'),
    div(class='code-controls',
-    selectInput('code_scope','分析來源',c('課本範例'='book','星座調查'='survey')),
+    selectInput('code_topic','分析題目',code_choices),
     selectInput('code_lang','語言',c('R'='r','Python'='python'))),
    uiOutput('code_example'))),
  tabPanel('教材下載與說明',card(h3('語法、資料與教材'),p('完整 Shiny 原始碼與資料放在 GitHub，新專案可下載後在 RStudio 執行。'),
@@ -106,9 +110,37 @@ server<-function(input,output,session) {
  output$book_figure_title<-renderText(if(book()$type=='mean'&&!book_testing())'區間估計圖' else '檢定示意圖')
  output$book_diagram<-renderUI({b<-book();if(b$type!='mean')return(note('此範例用來示範抽樣配置或臨界值，未繪製單一樣本檢定圖。'));a<-book_test();r<-a[a$method==input$bm,];if(!book_testing())return(HTML(single_ci_svg(r,input$ba,b$unit)));div(style='max-width:850px;margin:auto',h4(paste0(input$bm,'-test')),diagram_ui(r,input$ba,input$bt,input$bm))})
  output$book_download<-renderUI({b<-book();a(href=paste0('https://hawjeng.github.io/statistical-inference-lab/',b$file),target='_blank',class='btn btn-default','下載對應 Excel 原檔 ↓')})
- observeEvent(input$kind,{pool<-if(input$kind=='numeric')d$numeric else d$categorical;updateSelectInput(session,'variable',choices=choice_labels(pool),selected=if(input$kind=='numeric')'CT' else 'PhoneBrand')})
+ code_topic<-reactive({
+  req(input$code_topic)
+  strsplit(input$code_topic,':',fixed=TRUE)[[1]]
+ })
+ observeEvent(input$code_topic,{
+  topic<-code_topic()
+  if(topic[1]=='book'){
+   updateSelectInput(session,'example',selected=topic[2])
+  }else{
+   updateSelectInput(session,'kind',selected=topic[1])
+   updateSelectInput(session,'variable',choices=choice_labels(d[[if(topic[1]=='numeric')'numeric' else 'categorical']]),selected=topic[2])
+  }
+ },ignoreInit=TRUE)
+ observeEvent(input$main_tab,{
+  if(input$main_tab!='R／Python 語法')return()
+  topic<-code_topic()
+  if(topic[1]=='book')updateSelectInput(session,'code_topic',selected=paste0('book:',input$example))
+  else updateSelectInput(session,'code_topic',selected=paste(input$kind,input$variable,sep=':'))
+ },ignoreInit=TRUE)
+ observeEvent(input$kind,{
+  pool<-if(input$kind=='numeric')d$numeric else d$categorical
+  selected<-if(input$kind=='numeric')'CT' else 'PhoneBrand'
+  if(identical(input$main_tab,'R／Python 語法')&&!is.null(input$code_topic)){
+   topic<-code_topic()
+   if(topic[1]==input$kind)selected<-topic[2]
+  }
+  updateSelectInput(session,'variable',choices=choice_labels(pool),selected=selected)
+ })
  category_data<-reactive({req(input$kind=='category',d$categorical[[input$variable]]);d$categorical[[input$variable]]})
  output$category_choice<-renderUI({a<-category_data();selectInput('event','指定成功事件',setNames(as.character(seq_along(a$categories)),unlist(a$categories)))})
+ outputOptions(output,'category_choice',suspendWhenHidden=FALSE)
  counts<-reactive({a<-category_data();do.call(rbind,lapply(a$counts,unlist))})
  results<-reactive({al<-alpha()
   if(input$kind=='numeric'){pop<-d$numeric[[input$variable]];req(pop);do.call(rbind,lapply(seq_along(pop$groups),function(i){g<-pop$groups[[i]];a<-do.call(rbind,lapply(c('z','t'),function(m)mean_result(g$n,g$mean,g$sd,pop$mu,pop$sigma,m,al,input$tail)));a$z<-i;a}))
@@ -243,8 +275,10 @@ server<-function(input,output,session) {
   HTML(html_table(tab,a$reject %in% TRUE))
  })
  output$code_example<-renderUI({
-  req(input$code_scope,input$code_lang)
-  if(input$code_scope=='book'){
+  req(input$code_lang)
+  topic<-code_topic()
+  if(topic[1]=='book'){
+   req(input$example==topic[2])
    b<-book()
    title<-b$title
    if(b$type=='mean'){
@@ -258,6 +292,7 @@ server<-function(input,output,session) {
     if(b$type=='sampling')result<-tagList(note('重新執行語法會重新隨機抽樣。'),result)
    }
   }else{
+   req(input$kind==topic[1],input$variable==topic[2])
    a<-selected_results()
    id<-selected_id()
    successes<-NULL
@@ -272,15 +307,22 @@ server<-function(input,output,session) {
   }
   ext<-if(input$code_lang=='r')'R' else 'py'
   language<-if(input$code_lang=='r')'R' else 'Python'
-  code<-scripts[[input$code_lang]]
-  filename<-paste0(input$code_scope,'-analysis.',ext)
+  stem<-paste(c(topic[2],if(topic[1]!='book')c(paste0('sample-',id),if(input$kind=='category')paste0('event-',j))),collapse='-')
+  files<-analysis_download(scripts,input$code_lang,stem,title)
+  filename<-paste0(stem,'.',ext)
+  command<-paste(if(input$code_lang=='r')'Rscript' else 'python',filename)
   tagList(h4(title),
    div(class='code-columns',
     div(h5(paste('可執行的',language,'語法')),
      div(class='code-actions',
       tags$button(type='button',class='btn btn-primary',onclick='copyAnalysisCode(this)',paste('複製',language,'語法')),
-      tags$button(type='button',class='btn btn-default',onclick='downloadAnalysisCode(this)',`data-filename`=filename,paste0('下載 .',ext))),
-     tags$pre(class='analysis-code',tags$code(code))),
+      tags$button(type='button',class='btn btn-default',onclick='downloadAnalysisCode(this)',`data-filename`=filename,paste0('下載 .',ext)),
+      tags$button(type='button',class='btn btn-default',onclick='downloadAnalysisData(this)',
+       `data-filename`=files$data_file,'下載資料 CSV')),
+     p('將語法與 CSV 放在同一資料夾，在該資料夾的終端機執行。'),
+     p(tags$code(command)),
+     tags$pre(class='analysis-code',tags$code(files$code)),
+     tags$pre(class='analysis-data',hidden=NA,files$csv)),
     div(h5('分析結果'),result)))
  })
  observeEvent(input$save_csv,{

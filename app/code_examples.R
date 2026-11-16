@@ -1,88 +1,165 @@
-# Build standalone scripts from the same inputs used by the interactive analysis.
+# Produce a script and the CSV needed to reproduce its analysis.
 inference_scripts <- function(a, alpha, tail, successes=NULL, values=NULL) {
- rows<-lapply(seq_len(nrow(a)),function(i){
-  r<-a[i,]
-  list(method=r$method,n=r$n,estimate=r$mean,sd=r$sd,sigma=r$sigma,
-   reference=if(is.na(r$stat))NA_real_ else r$mu,successes=if(is.null(successes))NA_real_ else successes)
- })
- json<-function(x)as.character(jsonlite::toJSON(x,auto_unbox=TRUE,na='null',digits=NA))
- rnum<-function(x)if(is.null(x)||is.na(x))'NA_real_' else sprintf('%.17g',x)
- rrows<-vapply(rows,function(r)sprintf("  list(method='%s', n=%s, estimate=%s, s=%s, sigma=%s, ref=%s, x=%s)",
-  r$method,rnum(r$n),rnum(r$estimate),rnum(r$sd),rnum(r$sigma),rnum(r$reference),rnum(r$successes)),character(1))
- r<-c(sprintf("alpha <- %s",alpha),sprintf("tail <- '%s'",tail),
-  if(!is.null(values))paste0('values <- c(',paste(values,collapse=', '),')'),
-  'groups <- list(',paste(rrows,collapse=',\n'),')',
-  'for (g in groups) {',
+ raw<-!is.null(values)
+ data<-if(raw)data.frame(value=values) else data.frame(
+  method=a$method,n=a$n,estimate=a$mean,sample_sd=a$sd,population_sd=a$sigma,
+  reference=ifelse(is.na(a$stat),NA_real_,a$mu),
+  successes=if(is.null(successes))NA_real_ else successes)
+ rnum<-function(x)if(is.na(x))'NA_real_' else sprintf('%.17g',x)
+ r<-c(
+  '# 1. Read the accompanying CSV from the current working directory.',
+  'data <- read.csv(DATA_FILE)',
+  '',
+  '# 2. Set the confidence level and direction of the hypothesis test.',
+  sprintf('alpha <- %s',alpha),sprintf('tail <- "%s"',tail),
+  if(raw)c(
+   '# Calculate the sample summaries from the original observations.',
+   sprintf('groups <- data.frame(method="%s", n=length(data$value), estimate=mean(data$value),',a$method),
+   sprintf('  sample_sd=sd(data$value), population_sd=%s, reference=%s, successes=NA_real_)',
+    rnum(a$sigma),rnum(if(is.na(a$stat))NA_real_ else a$mu))
+  ) else c('# The CSV contains the survey summaries or success counts used in the calculations.','groups <- data'),
+  '',
+  '# 3. Calculate a two-sided confidence interval for each method.',
+  'for (i in seq_len(nrow(groups))) {',
+  '  g <- groups[i, ]',
   '  n <- g$n',
-  '  estimate <- g$estimate',
-  if(!is.null(values))'  n <- length(values); estimate <- mean(values); g$s <- sd(values)',
-  '  is_t <- g$method == "t"',
-  '  quantile <- if (is_t) function(p) qt(p, n-1) else qnorm',
-  '  cdf <- if (is_t) function(x) pt(x, n-1) else pnorm',
-  '  if (!is.na(g$x)) {',
-  '    estimate <- g$x/n',
-  '    ci_se <- sqrt(estimate*(1-estimate)/n)',
-  '    test_se <- sqrt(g$ref*(1-g$ref)/n)',
+  '  use_t <- g$method == "t"',
+  '  quantile <- if (use_t) function(p) qt(p, n - 1) else qnorm',
+  '  cdf <- if (use_t) function(x) pt(x, n - 1) else pnorm',
+  '',
+  '  if (!is.na(g$successes)) {',
+  '    # Wald interval for a proportion. The test uses the null proportion.',
+  '    estimate <- g$successes / n',
+  '    ci_se <- sqrt(estimate * (1 - estimate) / n)',
+  '    test_se <- sqrt(g$reference * (1 - g$reference) / n)',
   '  } else {',
-  '    ci_se <- (if (is_t) g$s else g$sigma)/sqrt(n)',
+  '    # Mean interval: use the population SD for z and sample SD for t.',
+  '    estimate <- g$estimate',
+  '    sd_used <- if (use_t) g$sample_sd else g$population_sd',
+  '    ci_se <- sd_used / sqrt(n)',
   '    test_se <- ci_se',
   '  }',
-  '  margin <- quantile(1-alpha/2)*ci_se',
-  '  out <- data.frame(method=g$method, n=n, estimate=estimate,',
-  '                    ci_se=ci_se, lower=estimate-margin, upper=estimate+margin)',
-  '  if (!is.na(g$ref)) {',
-  '    stat <- (estimate-g$ref)/test_se',
+  '  margin <- quantile(1 - alpha / 2) * ci_se',
+  '  result <- data.frame(method=g$method, n=n, estimate=estimate,',
+  '    ci_se=ci_se, lower=estimate-margin, upper=estimate+margin)',
+  '',
+  '  # 4. Test against the reference value when one is specified.',
+  '  if (!is.na(g$reference)) {',
+  '    stat <- (estimate - g$reference) / test_se',
   '    p <- switch(tail, two=2*cdf(-abs(stat)), left=cdf(stat), right=cdf(-stat))',
-  '    out <- transform(out, test_se=test_se, statistic=stat, p=p, reject=p<alpha)',
+  '    critical <- quantile(1 - alpha / if (tail == "two") 2 else 1)',
+  '    result <- transform(result, test_se=test_se, statistic=stat,',
+  '      critical=critical, p=p, reject=p<alpha)',
   '  }',
-  '  print(out, row.names=FALSE)',
+  '  print(result, row.names=FALSE)',
   '}')
- py<-c('# Install dependency: python -m pip install scipy','import json','from math import sqrt',
-  'from statistics import mean, stdev','from scipy.stats import norm, t','',
-  paste0('alpha = ',alpha),paste0('tail = ',json(tail)),
-  if(!is.null(values))paste0('values = [',paste(values,collapse=', '),']'),
-  paste0("groups = json.loads('",json(rows),"')"),
-  'for g in groups:',
-  '    n, estimate = g["n"], g["estimate"]',
-  if(!is.null(values))'    n, estimate, g["sd"] = len(values), mean(values), stdev(values)',
-  '    dist = t(df=n-1) if g["method"] == "t" else norm',
-  '    ref = g["reference"]',
-  '    if g["successes"] is not None:',
-  '        estimate = g["successes"]/n',
-  '        ci_se = sqrt(estimate*(1-estimate)/n)',
-  '        test_se = sqrt(ref*(1-ref)/n) if ref is not None else None',
+ py<-c(
+  '# Install the dependency once: python -m pip install scipy',
+  'import csv','from math import sqrt','from statistics import mean, stdev','from scipy.stats import norm, t','',
+  '# 1. Read the accompanying CSV from the current working directory.',
+  'with open(DATA_FILE, encoding="utf-8-sig", newline="") as file:',
+  '    data = list(csv.DictReader(file))',
+  '',
+  '# 2. Set the confidence level and direction of the hypothesis test.',
+  paste0('alpha = ',alpha),sprintf('tail = "%s"',tail),
+  if(raw)c(
+   '# Calculate the sample summaries from the original observations.',
+   'values = [float(row["value"]) for row in data]',
+   sprintf('groups = [dict(method="%s", n=len(values), estimate=mean(values),',a$method),
+   sprintf('               sample_sd=stdev(values), population_sd=%s, reference=%s, successes="")]',
+    a$sigma,if(is.na(a$stat))'""' else sprintf('%.17g',a$mu))
+  ) else c('# Each row contains the survey summaries or success counts for one method.','groups = data'),
+  '',
+  '# 3. Calculate a two-sided confidence interval for each method.',
+  'for group in groups:',
+  '    n = int(group["n"])',
+  '    use_t = group["method"] == "t"',
+  '    distribution = t(df=n-1) if use_t else norm',
+  '    reference = float(group["reference"]) if group["reference"] != "" else None',
+  '    if group["successes"] != "":',
+  '        # Wald interval for a proportion. The test uses the null proportion.',
+  '        estimate = int(group["successes"]) / n',
+  '        ci_se = sqrt(estimate * (1 - estimate) / n)',
+  '        test_se = sqrt(reference * (1 - reference) / n) if reference is not None else None',
   '    else:',
-  '        ci_se = (g["sd"] if g["method"] == "t" else g["sigma"])/sqrt(n)',
+  '        # Mean interval: use the population SD for z and sample SD for t.',
+  '        estimate = float(group["estimate"])',
+  '        sd_used = float(group["sample_sd"] if use_t else group["population_sd"])',
+  '        ci_se = sd_used / sqrt(n)',
   '        test_se = ci_se',
-  '    margin = dist.ppf(1-alpha/2)*ci_se',
-  '    result = dict(method=g["method"], n=n, estimate=estimate, ci_se=ci_se,',
+  '    margin = distribution.ppf(1 - alpha / 2) * ci_se',
+  '    result = dict(method=group["method"], n=n, estimate=estimate, ci_se=ci_se,',
   '                  lower=estimate-margin, upper=estimate+margin)',
-  '    if ref is not None:',
-  '        stat = (estimate-ref)/test_se',
-  '        p = {"two": 2*dist.sf(abs(stat)), "left": dist.cdf(stat), "right": dist.sf(stat)}[tail]',
-  '        result.update(test_se=test_se, statistic=stat, p=p, reject=p<alpha)',
+  '',
+  '    # 4. Test against the reference value when one is specified.',
+  '    if reference is not None:',
+  '        stat = (estimate - reference) / test_se',
+  '        p = {"two": 2*distribution.sf(abs(stat)), "left": distribution.cdf(stat),',
+  '             "right": distribution.sf(stat)}[tail]',
+  '        critical = distribution.ppf(1 - alpha / (2 if tail == "two" else 1))',
+  '        result.update(test_se=test_se, statistic=stat, critical=critical, p=p, reject=p<alpha)',
   '    print(result)')
- list(r=paste(r,collapse='\n'),python=paste(py,collapse='\n'))
+ list(r=r,python=py,data=data)
 }
 
 book_exercise_scripts <- function(b, n, alpha) {
+ r_read<-'data <- read.csv(DATA_FILE, fileEncoding="UTF-8")'
+ py_read<-c('import csv','with open(DATA_FILE, encoding="utf-8-sig", newline="") as file:',
+  '    data = list(csv.DictReader(file))')
  if(b$type=='critical'){
-  levels<-unique(c(alpha,.1,.05,.01,.001))
-  args<-paste(levels,collapse=', ')
   return(list(
-   r=sprintf('alpha <- c(%s)\nprint(data.frame(alpha, left=qnorm(alpha), right=qnorm(1-alpha), two=qnorm(1-alpha/2)))',args),
-   python=sprintf('# Install dependency: python -m pip install scipy\nfrom scipy.stats import norm\nfor alpha in [%s]:\n    print(alpha, norm.ppf(alpha), norm.isf(alpha), norm.isf(alpha/2))',args)))
+   data=data.frame(alpha=unique(c(alpha,.1,.05,.01,.001))),
+   r=c('# Read the significance levels and calculate standard normal cutoffs.',r_read,
+    'alpha <- data$alpha',
+    'print(data.frame(alpha, left=qnorm(alpha), right=qnorm(1-alpha),',
+    '                 two_sided=qnorm(1-alpha/2)), row.names=FALSE)'),
+   python=c('# Install the dependency once: python -m pip install scipy','from scipy.stats import norm',
+    '# Read the significance levels from the CSV.',py_read,
+    '# Report the left, right and positive two-sided critical values.',
+    'for row in data:','    alpha = float(row["alpha"])',
+    '    print(alpha, norm.ppf(alpha), norm.isf(alpha), norm.isf(alpha/2))')))
  }
  if(b$type=='sampling'){
-  ids<-paste(as.character(jsonlite::toJSON(unlist(b$ids),auto_unbox=FALSE)))
-  rids<-paste(vapply(as.character(unlist(b$ids)),encodeString,character(1),quote='"'),collapse=', ')
   return(list(
-   r=sprintf('ids <- c(%s)\nn <- %s\nk <- length(ids)/n\nprint(sample(ids, n))\nprint(ids[floor(runif(1, 0, k)+(0:(n-1))*k)+1])',rids,n),
-   python=sprintf('from random import random, sample\nids = %s\nn = %s\nk = len(ids)/n\nprint(sample(ids, n))\nstart = random()*k\nprint([ids[int(start + i*k)] for i in range(n)])',ids,n)))
+   data=data.frame(id=unlist(b$ids)),
+   r=c('# Read the roster, preserving identifiers as strings.',sub('fileEncoding','colClasses="character", fileEncoding',r_read,fixed=TRUE),
+    'ids <- data$id',sprintf('n <- %s',n),
+    '# Simple random sample without replacement.','print(sample(ids, n))',
+    '# Systematic sample with a random start and spacing N/n.',
+    'k <- length(ids) / n','start <- runif(1, 0, k)',
+    'print(ids[floor(start + (seq_len(n) - 1) * k) + 1])'),
+   python=c('from random import random, sample','# Read the roster identifiers.',py_read,
+    'ids = [row["id"] for row in data]',sprintf('n = %s',n),
+    '# Simple random sample without replacement.','print(sample(ids, n))',
+    '# Systematic sample with a random start and spacing N/n.',
+    'k = len(ids) / n','start = random() * k','print([ids[int(start + i*k)] for i in range(n)])')))
  }
  strata<-do.call(rbind,lapply(b$strata,as.data.frame))
- pop<-paste(strata$N,collapse=', ')
+ list(data=data.frame(stratum=strata$label,population=strata$N),
+  r=c('# Read the population count for each stratum.',r_read,sprintf('n <- %s',n),
+   '# Allocate in proportion to population size, rounding down first.',
+   'quota <- n * data$population / sum(data$population)','allocation <- floor(quota)',
+   '# Assign the remaining observations to the largest fractional remainders.',
+   'extra <- head(order(quota - allocation, decreasing=TRUE), n - sum(allocation))',
+   'allocation[extra] <- allocation[extra] + 1',
+   'print(transform(data, quota=quota, allocation=allocation), row.names=FALSE)'),
+  python=c('# Read the population count for each stratum.',py_read,sprintf('n = %s',n),
+   'population = [int(row["population"]) for row in data]',
+   '# Allocate in proportion to population size, rounding down first.',
+   'quota = [n * size / sum(population) for size in population]',
+   'allocation = [int(q) for q in quota]',
+   '# Assign the remaining observations to the largest fractional remainders.',
+   'order = sorted(range(len(data)), key=lambda i: quota[i]-allocation[i], reverse=True)',
+   'for i in order[:n-sum(allocation)]:','    allocation[i] += 1',
+   'for row, q, count in zip(data, quota, allocation):',
+   '    print(row["stratum"], row["population"], q, count)'))
+}
+
+analysis_download <- function(scripts, lang, stem, title) {
+ data_file<-paste0(stem,'.csv')
+ code<-gsub('DATA_FILE',sprintf('"%s"',data_file),scripts[[lang]],fixed=TRUE)
  list(
-  r=sprintf('N <- c(%s)\nn <- %s\nquota <- n*N/sum(N)\nallocation <- floor(quota)\nextra <- head(order(quota-allocation, decreasing=TRUE), n-sum(allocation))\nallocation[extra] <- allocation[extra]+1\nprint(data.frame(N, quota, allocation))',pop,n),
-  python=sprintf('N = [%s]\nn = %s\nquota = [n*size/sum(N) for size in N]\nallocation = [int(q) for q in quota]\norder = sorted(range(len(N)), key=lambda i: quota[i]-allocation[i], reverse=True)\nfor i in order[:n-sum(allocation)]:\n    allocation[i] += 1\nfor row in zip(N, quota, allocation):\n    print(*row)',pop,n))
+  code=paste(c(paste0('# ',title),'# Open a terminal in the folder containing this script and the CSV.',code),collapse='\n'),
+  data_file=data_file,
+  csv=paste(capture.output(write.csv(scripts$data,row.names=FALSE,na='')),collapse='\n'))
 }
