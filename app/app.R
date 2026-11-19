@@ -28,7 +28,7 @@ result_table<-function(a) {
   假設檢定標準誤=fmt(a$se,4),
   `觀察檢定量（z_obt／t_obt）`=fmt(a$stat,4),df=ifelse(is.na(a$df),'—',a$df),臨界值=fmt(a$critical,4),p值=ifelse(is.na(a$p),'—',p_fmt(a$p)),結論=ifelse(is.na(a$reject),'—',ifelse(a$reject,'拒絕 H₀','保留 H₀')),check.names=FALSE)
 }
-ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css'),tags$script(src='downloads.js'),
+ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css?v=title-scale'),tags$script(src='downloads.js'),
  tags$script(HTML("function reportHeight(){parent.postMessage({type:'inference-height',height:document.documentElement.scrollHeight},location.origin)};new ResizeObserver(reportHeight).observe(document.documentElement);setInterval(reportHeight,1500);"))),
  div(class='app-top',a(href='https://hawjeng.github.io/resources.html',class='btn btn-default btn-sm','← 返回教學與專案'),a(href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','GitHub 原始碼 ↗')),
  div(class='app-title',p(class='eyebrow','STATISTICS LAB · CONFIDENCE INTERVALS & HYPOTHESIS TESTING'),h1('區間估計與假設檢定'),p('原理說明、課本範例，再以星座調查資料練習。')),
