@@ -30,7 +30,8 @@ result_table<-function(a) {
 }
 ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css?v=title-scale'),tags$script(src='downloads.js'),
  tags$script(HTML("function reportHeight(){parent.postMessage({type:'inference-height',height:document.documentElement.scrollHeight},location.origin)};new ResizeObserver(reportHeight).observe(document.documentElement);setInterval(reportHeight,1500);"))),
- div(class='app-top',a(href='https://hawjeng.github.io/resources.html',class='btn btn-default btn-sm','← 返回教學與專案'),a(href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','GitHub 原始碼 ↗')),
+ tags$head(tags$link(rel='stylesheet',href='https://hawjeng.github.io/assets/lab-return.css')),
+ div(class='app-top',a(href='https://hawjeng.github.io/resources.html#statistics-apps',class='lab-return','← 返回教學與專案'),a(href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','GitHub 原始碼 ↗')),
  div(class='app-title',p(class='eyebrow','STATISTICS LAB · CONFIDENCE INTERVALS & HYPOTHESIS TESTING'),h1('區間估計與假設檢定'),p('原理說明、課本範例，再以星座調查資料練習。')),
  tabsetPanel(id='main_tab',selected='課本範例',
  tabPanel('原理說明',includeHTML('www/lesson.html')),
