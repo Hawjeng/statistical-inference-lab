@@ -80,12 +80,25 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  label<-if(isF)'F' else if(ischi)'χ²' else method
  peak_x<-max(125,min(435,X(xx[which.max(density)])))
  out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 %d" role="img" style="width:100%%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="%d" fill="white"/>',height,height),svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
- out<-c(out,'<defs><pattern id="alpha-hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0 6L6 0" stroke="#cb7017" stroke-width="1.5"/></pattern></defs>')
+ out<-c(out,'<defs><marker id="area-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#1e40af"/></marker></defs>')
  for(layer in 1:2){mask<-if(layer==1)extreme else rejection;run<-rle(mask);end<-cumsum(run$lengths);start<-end-run$lengths+1
- for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s" fill-opacity="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#169ac2' else 'url(#alpha-hatch)',if(layer==1)'.35' else '.9'))}}
+ for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#bfdbfe' else '#1e40af'))}}
  out<-c(out,sprintf('<polyline points="%s" fill="none" stroke="#344b58" stroke-width="2"/><path d="M56 232 H510" stroke="#344b58"/>',paste(sprintf('%.2f,%.2f',X(xx),Y(density)),collapse=' ')))
  for(tick in pretty(c(lo,hi),n=6))if(tick>=lo&&tick<=hi)out<-c(out,sprintf('<path d="M%.2f 232 V237" stroke="#344b58"/>',X(tick)),svg_text(X(tick),254,format(tick,trim=TRUE),'#526b76',11))
  cvs<-if(tail=='two')c(-critical,critical) else if(tail=='left')-critical else critical
+ # Label probability areas separately from the critical values on the axis.
+ area_arrow<-function(x1,y1,x2,y2)sprintf('<path d="M%.2f %.2f L%.2f %.2f" fill="none" stroke="#1e40af" stroke-width="1.3" marker-end="url(#area-arrow)"/>',x1,y1,x2,y2)
+ middle<-if(tail=='two')0 else if(tail=='left')critical/3 else if(positive)critical/2 else -critical/3
+ middle_x<-max(165,min(395,X(middle)))
+ out<-c(out,svg_text(middle_x,133,paste0('1−α = ',fmt(1-alpha,3)),'#1e40af',13),area_arrow(middle_x,141,X(middle),200))
+ area_label<-paste0(if(tail=='two')'α/2 = ' else 'α = ',fmt(if(tail=='two')alpha/2 else alpha,3))
+ for(cv in cvs){
+  side<-if(cv<0)-1 else 1
+  # Choose a point inside the shaded tail, even when alpha is very small.
+  target<-cv+side*.18
+  label_x<-max(105,min(455,X(cv)+side*50))
+  out<-c(out,svg_text(label_x,164,area_label,'#1e40af',12),area_arrow(label_x,172,X(target),232-(232-Y(pdf(target)))*.45))
+ }
  for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,fmt(cv),'#cb7017',12))
  tailprob<-if(tail=='two')alpha/2 else alpha
  cv_name<-if(isF)paste0('Fcv(',format(tailprob,trim=TRUE),'; ',df,', ',fmt(df2,2),')') else if(ischi)paste0('χ²cv(',format(tailprob,trim=TRUE),', ',df,')') else if(method=='t')paste0('tcv(',format(tailprob,trim=TRUE),', ',df,')') else paste0('zcv(',format(tailprob,trim=TRUE),')')
@@ -109,7 +122,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
    svg_text(upper_x+6,394,raw_values[3],ci_color,12,'start'),
    svg_text(X(0),417,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11))
  }
- out<-c(out,svg_text(280,height-12,'橘色斜線：α 拒絕域　藍色面積：p-value',size=11),'</svg>');paste(out,collapse='')
+ out<-c(out,svg_text(280,height-12,'深藍：α 拒絕域　淺藍：p-value（重疊處顯示深藍）',size=11),'</svg>');paste(out,collapse='')
 }
 html_table <- function(a,reject=NULL) {
  heads<-paste0('<th>',esc(names(a)),'</th>',collapse='');rows<-vapply(seq_len(nrow(a)),function(i)paste0('<tr',if(!is.null(reject)&&reject[i])' class="reject"' else '', '>',paste0('<td>',esc(unlist(a[i,],use.names=FALSE)),'</td>',collapse=''),'</tr>'),character(1))
@@ -129,4 +142,3 @@ single_ci_svg <- function(r,alpha,unit='原始單位') {
  out<-c(out,svg_text(430,223,paste0('原始數值（',unit,'）'),size=13),svg_text(430,250,paste0('SE = ',fmt(r$se,4),'；',r$method,'cv = ',fmt(r$ci_critical,4),'；誤差界限 = ',fmt(half,4)),'#536c76',12),'</svg>')
  paste(out,collapse='')
 }
-

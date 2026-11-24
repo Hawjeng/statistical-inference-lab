@@ -57,7 +57,14 @@ testServer(app,session=mock,{
  stopifnot(grepl('H₀：μ = 23',output$book_diagram$html,fixed=TRUE),!grepl('事先設定的 α',output$book_diagram$html,fixed=TRUE))
  svg<-distribution_svg(-2.053860157,qt(.975,77),77,'two',.05,.043383767,'t',TRUE)
  stopifnot(grepl('t_obt = -2.054, p = 0.0434',svg,fixed=TRUE),grepl('tcv(0.025, 77)',svg,fixed=TRUE))
- stopifnot(grepl('alpha-hatch',svg,fixed=TRUE),grepl('#169ac2',svg,fixed=TRUE),!grepl('檢定量（',svg,fixed=TRUE))
+ stopifnot(grepl('1−α = 0.950',svg,fixed=TRUE),grepl('α/2 = 0.025',svg,fixed=TRUE),
+  grepl('marker-end="url(#area-arrow)"',svg,fixed=TRUE),grepl('#1e40af',svg,fixed=TRUE),
+  grepl('#bfdbfe',svg,fixed=TRUE),!grepl('alpha-hatch',svg,fixed=TRUE),!grepl('檢定量（',svg,fixed=TRUE))
+ for(direction in c('left','right')){
+  one<-distribution_svg(.8,qnorm(.95),tail=direction,alpha=.05)
+  stopifnot(grepl('α = 0.050',one,fixed=TRUE),!grepl('α/2 =',one,fixed=TRUE),
+   grepl('1−α = 0.950',one,fixed=TRUE))
+ }
  stopifnot(grepl('stroke="#7c3aed"',svg,fixed=TRUE),grepl('fill="#7c3aed"',svg,fixed=TRUE))
  ci<-ci_svg(results(),z_labels,prop=TRUE,selected=1)
  stopifnot(grepl('stroke="black"',ci,fixed=TRUE))
