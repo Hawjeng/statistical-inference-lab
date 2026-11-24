@@ -69,13 +69,13 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  ischi<-method=='chi';isF<-method=='F';positive<-ischi||isF
  pdf<-if(isF)function(x)df(x,df,df2) else if(ischi)function(x)dchisq(x,df) else if(method=='t')function(x)dt(x,df) else dnorm
  hi<-if(isF)max(qf(.999,df,df2),stat*1.15,critical*1.6) else if(ischi)max(critical*1.6,stat*1.15,df+5*sqrt(2*df),6) else max(4.2,abs(stat)+.8,critical+.8);lo<-if(positive)0 else -hi
- height<-355
+ height<-295
  if(!is.null(ci)){
   # Put the raw endpoints on the same scale as the observed statistic.
   ci_positions<-(c(ci$lower,ci$upper)-ci$mu)/ci$se
   hi<-max(hi,abs(ci_positions)+.8)
   lo<--hi
-  height<-477
+  height<-417
  }
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
  rejection<-if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical
@@ -111,12 +111,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  }
  for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,paste0(if(cv<0)'−' else '+',if(method=='t')'tcv' else 'zcv',' = ',fmt(cv)),'#cb7017',12))
  out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#7c3aed',12,if(stat<0)'start' else 'end'))
- tailprob<-if(tail=='two')alpha/2 else alpha
- cv_name<-if(isF)paste0('Fcv(',format(tailprob,trim=TRUE),'; ',df,', ',fmt(df2,2),')') else if(ischi)paste0('χ²cv(',format(tailprob,trim=TRUE),', ',df,')') else if(method=='t')paste0('tcv(',format(tailprob,trim=TRUE),', ',df,')') else paste0('zcv(',format(tailprob,trim=TRUE),')')
- cv_label<-paste0(cv_name,' = ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical),'；α = ',alpha)
- obs_label<-paste0(if(ischi)'χ²' else paste0(method,'_obt'),' = ',fmt(stat),', p = ',p_fmt(p))
- obs_x<-max(135,min(425,X(stat)))
- out<-c(out,sprintf('<path d="M%.2f 80 V232 M%.2f 290 V299" stroke="#7c3aed" stroke-width="2.3"/>',X(stat),X(stat)),svg_text(280,278,cv_label,'#cb7017',12),svg_text(obs_x,315,obs_label,'#7c3aed',13),svg_text(524,237,label,size=14))
+ out<-c(out,sprintf('<path d="M%.2f 80 V232" stroke="#7c3aed" stroke-width="2.3"/>',X(stat)),svg_text(524,237,label,size=14))
  if(!is.null(ci)){
   covers_zero<-ci$lower<=ci$mu && ci$mu<=ci$upper
   ci_color<-if(covers_zero)'#2563eb' else '#c32d3b'
@@ -124,15 +119,15 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   is_proportion<-!is.null(ci$approxOK)
   raw_values<-if(is_proportion)paste0(fmt(100*c(ci$lower,ci$mean,ci$upper),2),'%') else fmt(c(ci$lower,ci$mean,ci$upper),4)
   out<-c(out,
-   svg_text(280,339,paste0(fmt((1-alpha)*100,1),'% CI（原始尺度）｜',if(covers_zero)'涵蓋 0' else '未涵蓋 0'),ci_color,12),
-   sprintf('<path d="M%.2f 349 V403" stroke="#526b76" stroke-dasharray="3 3"/>',X(0)),
-   sprintf('<path d="M%.2f 374 H%.2f M%.2f 368 V380 M%.2f 368 V380" stroke="%s" stroke-width="2.5"/>',lower_x,upper_x,lower_x,upper_x,ci_color),
-   sprintf('<circle cx="%.2f" cy="374" r="4" fill="#7c3aed"/>',X(stat)),
-   svg_text(X(stat),362,paste0(if(is_proportion)'p̂ = ' else 'x̄ = ',raw_values[2]),'#7c3aed',12),
-   svg_text(lower_x-6,394,raw_values[1],ci_color,12,'end'),
-   svg_text(upper_x+6,394,raw_values[3],ci_color,12,'start'),
-   svg_text(X(0),417,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11),
-   svg_text(280,443,'此雙側 CI 適用於雙尾比較，不適用於單尾比較情境。','#c32d3b',12))
+   svg_text(280,279,paste0(fmt((1-alpha)*100,1),'% CI（原始尺度）｜',if(covers_zero)'涵蓋 0' else '未涵蓋 0'),ci_color,12),
+   sprintf('<path d="M%.2f 289 V343" stroke="#526b76" stroke-dasharray="3 3"/>',X(0)),
+   sprintf('<path d="M%.2f 314 H%.2f M%.2f 308 V320 M%.2f 308 V320" stroke="%s" stroke-width="2.5"/>',lower_x,upper_x,lower_x,upper_x,ci_color),
+   sprintf('<circle cx="%.2f" cy="314" r="4" fill="#7c3aed"/>',X(stat)),
+   svg_text(X(stat),302,paste0(if(is_proportion)'p̂ = ' else 'x̄ = ',raw_values[2]),'#7c3aed',12),
+   svg_text(lower_x-6,334,raw_values[1],ci_color,12,'end'),
+   svg_text(upper_x+6,334,raw_values[3],ci_color,12,'start'),
+   svg_text(X(0),357,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11),
+   svg_text(280,383,'此雙側 CI 適用於雙尾比較，不適用於單尾比較情境。','#c32d3b',12))
  }
  out<-c(out,svg_text(280,height-12,'深藍：α 拒絕域　淺藍：p-value（重疊處為深藍斜線）',size=11),'</svg>');paste(out,collapse='')
 }

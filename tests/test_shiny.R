@@ -57,7 +57,7 @@ testServer(app,session=mock,{
  session$setInputs(bm='t');session$flushReact();stopifnot(grepl('t_obt',output$book_diagram$html,fixed=TRUE),!grepl('z_obt',output$book_diagram$html,fixed=TRUE));session$setInputs(bm='z');session$flushReact()
  stopifnot(grepl('H₀：μ = 23',output$book_diagram$html,fixed=TRUE),!grepl('事先設定的 α',output$book_diagram$html,fixed=TRUE))
  svg<-distribution_svg(-2.053860157,qt(.975,77),77,'two',.05,.043383767,'t',TRUE)
- stopifnot(grepl('t_obt = -2.054, p = 0.0434',svg,fixed=TRUE),grepl('tcv(0.025, 77)',svg,fixed=TRUE))
+ stopifnot(grepl('t_obt = -2.054',svg,fixed=TRUE),grepl('p/2 = 0.0217',svg,fixed=TRUE),grepl('+tcv = 1.991',svg,fixed=TRUE))
  stopifnot(grepl('1−α = 0.950',svg,fixed=TRUE),grepl('α/2 = 0.025',svg,fixed=TRUE),
   grepl('marker-end="url(#area-arrow)"',svg,fixed=TRUE),grepl('#1e40af',svg,fixed=TRUE),
   grepl('#bfdbfe',svg,fixed=TRUE),!grepl('alpha-hatch',svg,fixed=TRUE),!grepl('檢定量（',svg,fixed=TRUE))
