@@ -60,7 +60,7 @@ testServer(app,session=mock,{
  stopifnot(grepl('t_obt = -2.054',svg,fixed=TRUE),grepl('p/2 = 0.0217',svg,fixed=TRUE),grepl('+tcv = 1.991',svg,fixed=TRUE))
  stopifnot(grepl('1−α = 0.950',svg,fixed=TRUE),grepl('α/2 = 0.025',svg,fixed=TRUE),
   grepl('marker-end="url(#area-arrow)"',svg,fixed=TRUE),grepl('#1e40af',svg,fixed=TRUE),
-  grepl('#bfdbfe',svg,fixed=TRUE),!grepl('alpha-hatch',svg,fixed=TRUE),!grepl('檢定量（',svg,fixed=TRUE))
+  grepl('#fbbf24',svg,fixed=TRUE),!grepl('<pattern',svg,fixed=TRUE),!grepl('檢定量（',svg,fixed=TRUE))
  for(direction in c('left','right')){
   one<-distribution_svg(.8,qnorm(.95),tail=direction,alpha=.05)
   stopifnot(grepl('α = 0.050',one,fixed=TRUE),!grepl('α/2 =',one,fixed=TRUE),

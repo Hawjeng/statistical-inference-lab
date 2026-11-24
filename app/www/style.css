@@ -10,3 +10,11 @@ body{font-family:"Microsoft JhengHei","PingFang TC",Arial,sans-serif;color:#183d
 .survey-details>summary{padding:0;background:transparent;color:inherit;font-size:22px;font-weight:500}.survey-details[open]>summary{margin-bottom:16px}
 
 .survey-details>summary{display:flex;align-items:baseline;justify-content:space-between;gap:12px;cursor:pointer;list-style:none}.survey-details>summary::-webkit-details-marker{display:none}.survey-toggle{flex:none;font-size:14px;color:#275365}.survey-toggle::after{content:"展開 ▸"}.survey-details[open] .survey-toggle::after{content:"收合 ▾"}
+
+.survey-workspace{display:flex;gap:20px;align-items:flex-start}
+.survey-calculations,.survey-workspace>.shiny-panel-conditional{flex:1 1 0;min-width:0}
+.test-stack{display:flex;flex-direction:column;gap:20px}
+.test-panel{min-width:0}
+.survey-diagrams .test-panel h4{margin:0 0 8px}
+.survey-diagrams .test-panel+.test-panel{border-top:1px solid #d7e4e8;padding-top:18px}
+@media(max-width:767px){.survey-workspace{flex-direction:column;gap:0}.survey-calculations,.survey-workspace>.shiny-panel-conditional{width:100%;flex-basis:auto}}

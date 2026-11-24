@@ -22,14 +22,14 @@ null_label<-function(tail,mu,param='μ')paste0('H₀：',param,if(tail=='left')'
 diagram_ui<-function(r,alpha,tail,method,h0=null_label(tail,r$mu)) {
  HTML(distribution_svg(r$stat,r$critical,r$df,tail,alpha,r$p,method,h0=h0,ci=r))
 }
-comparison_ui<-function(a,alpha,tail,param='μ')fluidRow(lapply(c('z','t'),function(m){r<-a[a$method==m,];column(6,h4(paste0(m,'-test')),diagram_ui(r,alpha,tail,m,h0=null_label(tail,r$mu,param)))}))
+comparison_ui<-function(a,alpha,tail,param='μ')div(class='test-stack',lapply(c('z','t'),function(m){r<-a[a$method==m,];div(class='test-panel',h4(paste0(m,'-test')),diagram_ui(r,alpha,tail,m,h0=null_label(tail,r$mu,param)))}))
 hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H₀：',param,if(tail=='two')' = ' else if(tail=='left')' ≥ ' else ' ≤ ',fmt(mu,4),'<br>H₁：',param,if(tail=='two')' ≠ ' else if(tail=='left')' &lt; ' else ' &gt; ',fmt(mu,4),'</div>'))
 result_table<-function(a) {
  data.frame(方法=a$method,n=a$n,平均數=fmt(a$mean,4),信賴區間標準誤=fmt(a$ci_se,4),CI下限=fmt(a$lower,4),CI上限=fmt(a$upper,4),
   假設檢定標準誤=fmt(a$se,4),
   `觀察檢定量（z_obt／t_obt）`=fmt(a$stat,4),df=ifelse(is.na(a$df),'—',a$df),臨界值=fmt(a$critical,4),p值=ifelse(is.na(a$p),'—',p_fmt(a$p)),結論=ifelse(is.na(a$reject),'—',ifelse(a$reject,'拒絕 H₀','保留 H₀')),check.names=FALSE)
 }
-ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css?v=title-scale'),tags$script(src='downloads.js'),
+ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css?v=stacked-test-diagrams'),tags$script(src='downloads.js'),
  tags$script(HTML("function reportHeight(){parent.postMessage({type:'inference-height',height:document.documentElement.scrollHeight},location.origin)};new ResizeObserver(reportHeight).observe(document.documentElement);setInterval(reportHeight,1500);"))),
  tags$head(tags$link(rel='stylesheet',href='https://hawjeng.github.io/assets/lab-return.css')),
  div(class='app-top',a(href='https://hawjeng.github.io/resources.html#statistics-apps',class='lab-return','← 返回教學與專案'),a(href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','GitHub 原始碼 ↗')),
@@ -72,14 +72,15 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
       conditionalPanel(condition,numericInput(paste0('survey_sigma_',key),'母體標準差 σ',round(pop$sigma,4),step='any')))
     })),
    uiOutput('population'),uiOutput('scope_note')),
-  fluidRow(column(4,
+  card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')),
+  div(class='survey-workspace',
+   div(class='survey-calculations',
     tags$details(class='lab-card survey-details',open=NA,
      tags$summary(textOutput('survey_ci_title',inline=TRUE),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_ci_steps')),
     tags$details(class='lab-card survey-details',open=NA,
      tags$summary(span('假設、檢定與結論'),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_result'),
      note('保留 H₀ 表示未能拒絕，不表示證明相等。'))),
-   column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
-  conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('深藍：α 拒絕域；淺藍：p-value 尾端面積，重疊處以深藍斜線標示拒絕域。中央標示 1−α；箭頭標示各尾的 α 或 α/2。紅色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
+   conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),class='survey-diagrams'))),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('R／Python 語法',
   card(h3('分析語法與結果'),
