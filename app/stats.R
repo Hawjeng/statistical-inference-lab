@@ -112,7 +112,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   out<-c(out,prob_text(px,193,paste0(if(tail=='two')'p/2 = ' else 'p = ',p_fmt(if(tail=='two')p/2 else p)),'#c97908',12),p_area_arrow(px,201,X(target),232-(232-Y(pdf(target)))*.45))
  }
  for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,paste0(if(cv<0)'−' else '+',if(method=='t')'tcv' else 'zcv',' = ',fmt(cv)),'#cb7017',12))
- out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#dc2626',12,if(stat<0)'start' else 'end'))
+ out<-c(out,svg_text(X(stat)+if(stat<0)-8 else 8,119,paste0(method,'_obt = ',fmt(stat)),'#dc2626',12,if(stat<0)'end' else 'start'))
  out<-c(out,sprintf('<path d="M%.2f 80 V232" stroke="#dc2626" stroke-width="2.3"/>',X(stat)),svg_text(524,237,label,size=14))
  if(!is.null(ci)){
   covers_zero<-ci$lower<=ci$mu && ci$mu<=ci$upper
