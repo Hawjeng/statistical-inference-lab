@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -15,18 +16,23 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - name: Install R and system dependencies
-        run: sudo apt-get update && sudo apt-get install -y r-base libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev libarchive-dev
-      - name: Install export tools
-        run: sudo Rscript -e 'install.packages(c("shinylive", "shiny", "jsonlite"), repos="https://packagemanager.posit.co/cran/__linux__/noble/latest", Ncpus=2); stopifnot(all(vapply(c("shinylive", "shiny", "jsonlite"), requireNamespace, logical(1), quietly=TRUE)))'
-      - name: Verify teaching app
-        run: Rscript -e 'setwd("app"); source("../tests/test_shiny.R", encoding="UTF-8")'
-      - name: Export Shinylive
-        run: Rscript build.R
+      - name: Find verified runtime
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python .github/scripts/update-export.py find-base
+      - uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: baseline
+          run-id: ${{ env.BASE_RUN_ID }}
+          github-token: ${{ github.token }}
+      - name: Refresh and verify application sources
+        run: python .github/scripts/update-export.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
+          retention-days: 90
   deploy:
     needs: build
     runs-on: ubuntu-24.04
@@ -36,5 +42,3 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          timeout: '1200000'
