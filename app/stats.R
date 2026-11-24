@@ -82,12 +82,12 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  extreme<-if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat
  label<-if(isF)'F' else if(ischi)'χ²' else method
  peak_x<-max(125,min(435,X(xx[which.max(density)])))
- out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 %d" role="img" style="width:100%%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="%d" fill="white"/>',height,height),svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
+ out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 %d" role="img" style="width:100%%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="%d" fill="white"/>',height,height),svg_text(peak_x,48,h0,'#183d47',14))
  out<-c(out,'<defs><marker id="area-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#1e40af" stroke="white" stroke-width="2" paint-order="stroke fill"/></marker><pattern id="alpha-overlap" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7 L7 0" stroke="#1e40af" stroke-width="1.5"/></pattern></defs>')
  for(layer in 1:3){mask<-if(layer==1)rejection else if(layer==2)extreme else rejection & extreme;run<-rle(mask);end<-cumsum(run$lengths);start<-end-run$lengths+1
  for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#1e40af' else if(layer==2)'#bfdbfe' else 'url(#alpha-overlap)'))}}
  out<-c(out,sprintf('<polyline points="%s" fill="none" stroke="#344b58" stroke-width="2"/><path d="M56 232 H510" stroke="#344b58"/>',paste(sprintf('%.2f,%.2f',X(xx),Y(density)),collapse=' ')))
- for(tick in pretty(c(lo,hi),n=6))if(tick>=lo&&tick<=hi)out<-c(out,sprintf('<path d="M%.2f 232 V237" stroke="#344b58"/>',X(tick)),svg_text(X(tick),254,format(tick,trim=TRUE),'#526b76',11))
+ for(tick in seq(ceiling(lo),floor(hi),by=1))if(tick>=lo&&tick<=hi)out<-c(out,sprintf('<path d="M%.2f 232 V237" stroke="#344b58"/>',X(tick)),svg_text(X(tick),254,format(tick,trim=TRUE),'#526b76',11))
  cvs<-if(tail=='two')c(-critical,critical) else if(tail=='left')-critical else critical
  # Label probability areas separately from the critical values on the axis.
  area_arrow<-function(x1,y1,x2,y2)sprintf('<path d="M%.2f %.2f L%.2f %.2f" fill="none" stroke="#1e40af" stroke-width="1.3" marker-end="url(#area-arrow)"/>',x1,y1,x2,y2)
