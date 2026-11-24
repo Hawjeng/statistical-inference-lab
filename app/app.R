@@ -23,6 +23,10 @@ diagram_ui<-function(r,alpha,tail,method,h0=null_label(tail,r$mu)) {
  HTML(distribution_svg(r$stat,r$critical,r$df,tail,alpha,r$p,method,h0=h0,ci=r))
 }
 comparison_ui<-function(a,alpha,tail,param='μ')div(class='test-stack',lapply(c('z','t'),function(m){r<-a[a$method==m,];div(class='test-panel',h4(paste0(m,'-test')),diagram_ui(r,alpha,tail,m,h0=null_label(tail,r$mu,param)))}))
+decision_note<-function(reject,tail,param='母體平均數'){
+ relation<-switch(tail,two='與假設參考值具有顯著差異',left='顯著低於假設參考值',right='顯著高於假設參考值')
+ p(class='decision-explanation',if(isTRUE(reject))paste0('在目前顯著水準下，',param,relation,'。') else paste0('目前證據不足，尚無法認為',param,relation,'。'))
+}
 hypotheses<-function(tail,mu,param='μ')HTML(paste0('<div class="hypothesis">H₀：',param,if(tail=='two')' = ' else if(tail=='left')' ≥ ' else ' ≤ ',fmt(mu,4),'<br>H₁：',param,if(tail=='two')' ≠ ' else if(tail=='left')' &lt; ' else ' &gt; ',fmt(mu,4),'</div>'))
 result_table<-function(a) {
  data.frame(方法=a$method,n=a$n,平均數=fmt(a$mean,4),信賴區間標準誤=fmt(a$ci_se,4),CI下限=fmt(a$lower,4),CI上限=fmt(a$upper,4),
@@ -116,7 +120,7 @@ server<-function(input,output,session) {
  book_result<-reactive({input$resample;b<-book()
   if(b$type=='mean'){a<-book_test();r<-a[a$method==input$bm,];testing<-book_testing();tagList(div(class='population',paste0('n = ',r$n,'；x̄ = ',fmt(r$mean,4),if(grepl('投手',b$title))'；s ≈ 9' else paste0('；s = ',fmt(r$sd,4)),if(r$method=='z')paste0('；已知 σ = ',fmt(r$sigma,4)) else '；母體 σ 未知，以樣本 s 估計')),if(grepl('投手',b$title))note('原始 30 筆資料的 s = 8.998084，原題近似為 9；計算保留原始精度。'),if(testing)hypotheses(input$bt,input$bmu),
    h4('1　標準誤'),p(if(r$method=='z')'SE = σ/√n' else 'SE = s/√n',' = ',fmt(r$se,4)),h4('2　雙側信賴區間'),p(paste0(fmt((1-input$ba)*100,1),'% CI = x̄ ± ',fmt(r$ci_critical,4),' × SE = [',fmt(r$lower,4),', ',fmt(r$upper,4),'] ',b$unit)),
-   if(testing)tagList(h4('3　觀察檢定量與決策'),p(paste0(r$method,'_obt = (x̄−μ₀)/SE = ',fmt(r$stat,4),'；p = ',p_fmt(r$p))),note('z_obt／t_obt 是觀察檢定量；zcv／tcv 是檢定臨界值。'),div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀')) else note('這是區間估計題，沒有指定 H₀，不計算觀察檢定量或 p-value。'),
+   if(testing)tagList(h4('3　觀察檢定量與決策'),p(paste0(r$method,'_obt = (x̄−μ₀)/SE = ',fmt(r$stat,4),'；p = ',p_fmt(r$p))),note('z_obt／t_obt 是觀察檢定量；zcv／tcv 是檢定臨界值。'),div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'),decision_note(r$reject,input$bt)) else note('這是區間估計題，沒有指定 H₀，不計算觀察檢定量或 p-value。'),
    tags$details(tags$summary('完整計算表（展開／收合）'),if(testing)HTML(html_table(result_table(a),a$reject))else HTML(html_table(data.frame(方法=r$method,n=r$n,平均數=fmt(r$mean,4),SE=fmt(r$se,4),CI臨界值=fmt(r$ci_critical,4),CI下限=fmt(r$lower,4),CI上限=fmt(r$upper,4))))),tags$details(tags$summary('原始有效數值'),p(paste(fmt(unlist(b$values)),collapse='、'))))
   }else if(b$type=='critical'){as<-c(input$ba,.1,.05,.01,.001);as<-unique(as);HTML(html_table(data.frame(α=as,左尾=fmt(qnorm(as),4),右尾=fmt(qnorm(1-as),4),雙尾=paste0('±',fmt(qnorm(1-as/2),4)))))
   }else if(b$type=='sampling'){ids<-unlist(b$ids);n<-as.integer(input$bn);validate(need(n>=1&&n<=length(ids),paste('樣本數須介於 1 與',length(ids))));k<-length(ids)/n;ss<-ids[floor(runif(1,0,k)+(0:(n-1))*k)+1];tagList(p('名冊 N = ',length(ids),'；抽樣 n = ',n,'；系統間距 N/n = ',fmt(k,2)),h4('簡單隨機抽樣'),p(paste(sample(ids,n),collapse='、')),h4('系統隨機抽樣'),p(paste(ss,collapse='、')),note('編號只用來辨識抽樣單位，不對學號的平均數作檢定。'))
@@ -309,7 +313,7 @@ server<-function(input,output,session) {
     }else p('假設檢定標準誤 = ',fmt(r$se,4),'；',statistic,' = ',fmt(r$stat,4),'；p = ',p_fmt(r$p))
     div(class='result-block',h4(paste0(statistic,'（',r$method,'-statistic）')),
      steps,
-     div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'))
+     div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'),decision_note(r$reject,input$tail,if(input$kind=='category')'母體比例' else '母體平均數'))
    }),
    if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。')
   )
