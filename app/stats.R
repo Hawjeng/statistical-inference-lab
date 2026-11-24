@@ -110,8 +110,8 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   out<-c(out,svg_text(px,193,paste0(if(tail=='two')'p/2 = ' else 'p = ',p_fmt(if(tail=='two')p/2 else p)),'#2563eb',12),area_arrow(px,201,X(target),232-(232-Y(pdf(target)))*.45))
  }
  for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,paste0(if(cv<0)'−' else '+',if(method=='t')'tcv' else 'zcv',' = ',fmt(cv)),'#cb7017',12))
- out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#7c3aed',12,if(stat<0)'start' else 'end'))
- out<-c(out,sprintf('<path d="M%.2f 80 V232" stroke="#7c3aed" stroke-width="2.3"/>',X(stat)),svg_text(524,237,label,size=14))
+ out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#dc2626',12,if(stat<0)'start' else 'end'))
+ out<-c(out,sprintf('<path d="M%.2f 80 V232" stroke="#dc2626" stroke-width="2.3"/>',X(stat)),svg_text(524,237,label,size=14))
  if(!is.null(ci)){
   covers_zero<-ci$lower<=ci$mu && ci$mu<=ci$upper
   ci_color<-if(covers_zero)'#2563eb' else '#c32d3b'
@@ -122,8 +122,8 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
    svg_text(280,279,paste0(fmt((1-alpha)*100,1),'% CI（原始尺度）｜',if(covers_zero)'涵蓋 0' else '未涵蓋 0'),ci_color,12),
    sprintf('<path d="M%.2f 289 V343" stroke="#526b76" stroke-dasharray="3 3"/>',X(0)),
    sprintf('<path d="M%.2f 314 H%.2f M%.2f 308 V320 M%.2f 308 V320" stroke="%s" stroke-width="2.5"/>',lower_x,upper_x,lower_x,upper_x,ci_color),
-   sprintf('<circle cx="%.2f" cy="314" r="4" fill="#7c3aed"/>',X(stat)),
-   svg_text(X(stat),302,paste0(if(is_proportion)'p̂ = ' else 'x̄ = ',raw_values[2]),'#7c3aed',12),
+   sprintf('<circle cx="%.2f" cy="314" r="4" fill="#dc2626"/>',X(stat)),
+   svg_text(X(stat),302,paste0(if(is_proportion)'p̂ = ' else 'x̄ = ',raw_values[2]),'#dc2626',12),
    svg_text(lower_x-6,334,raw_values[1],ci_color,12,'end'),
    svg_text(upper_x+6,334,raw_values[3],ci_color,12,'start'),
    svg_text(X(0),357,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11),

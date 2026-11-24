@@ -66,7 +66,7 @@ testServer(app,session=mock,{
   stopifnot(grepl('α = 0.050',one,fixed=TRUE),!grepl('α/2 =',one,fixed=TRUE),
    grepl('1−α = 0.950',one,fixed=TRUE))
  }
- stopifnot(grepl('stroke="#7c3aed"',svg,fixed=TRUE),grepl('fill="#7c3aed"',svg,fixed=TRUE))
+ stopifnot(grepl('stroke="#dc2626"',svg,fixed=TRUE),grepl('fill="#dc2626"',svg,fixed=TRUE))
  ci<-ci_svg(results(),z_labels,prop=TRUE,selected=1)
  stopifnot(grepl('stroke="black"',ci,fixed=TRUE))
  session$setInputs(example='Ch08p179pitcher',book_enable_test=FALSE,bmu=NA_real_,bsigma=10,bm='z',ba=.05,bt='two');session$flushReact()
