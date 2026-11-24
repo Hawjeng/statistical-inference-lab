@@ -99,7 +99,8 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   label_x<-max(105,min(455,X(cv)+side*50))
   out<-c(out,svg_text(label_x,164,area_label,'#1e40af',12),area_arrow(label_x,172,X(target),232-(232-Y(pdf(target)))*.45))
  }
- for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,fmt(cv),'#cb7017',12))
+ for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,paste0(if(cv<0)'−' else '+',if(method=='t')'tcv' else 'zcv',' = ',fmt(cv)),'#cb7017',12))
+ out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#7c3aed',12,if(stat<0)'start' else 'end'))
  tailprob<-if(tail=='two')alpha/2 else alpha
  cv_name<-if(isF)paste0('Fcv(',format(tailprob,trim=TRUE),'; ',df,', ',fmt(df2,2),')') else if(ischi)paste0('χ²cv(',format(tailprob,trim=TRUE),', ',df,')') else if(method=='t')paste0('tcv(',format(tailprob,trim=TRUE),', ',df,')') else paste0('zcv(',format(tailprob,trim=TRUE),')')
  cv_label<-paste0(cv_name,' = ',if(tail=='two')'±' else if(tail=='left')'−' else '',fmt(critical),'；α = ',alpha)
