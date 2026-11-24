@@ -30,7 +30,10 @@ chi_result <- function(counts,mode='independence',selected=1) {
 esc <- function(x) {x<-gsub('&','&amp;',as.character(x),fixed=TRUE);x<-gsub('<','&lt;',x,fixed=TRUE);gsub('>','&gt;',x,fixed=TRUE)}
 fmt <- function(x,d=3) ifelse(is.finite(x),formatC(x,digits=d,format='f'),'—')
 p_fmt <- function(x) ifelse(x<.0001,'< .0001',formatC(x,digits=4,format='f'))
-svg_text <- function(x,y,label,col='#334155',size=13,anchor='middle') sprintf('<text x="%.2f" y="%.2f" fill="%s" font-size="%s" text-anchor="%s">%s</text>',x,y,col,size,anchor,esc(label))
+svg_text<-function(x,y,label,col='#334155',size=13,anchor='middle'){
+ text<-gsub('([zt])_?(obt|cv)','\\1<tspan baseline-shift="sub" font-size="75%">\\2</tspan>',esc(label),perl=TRUE)
+ sprintf('<text x="%.2f" y="%.2f" fill="%s" font-size="%s" text-anchor="%s" aria-label="%s">%s</text>',x,y,col,size,anchor,esc(label),text)
+}
 ci_svg <- function(a,names_z,prop=FALSE,selected=1) {
  ref<-a$mu[1];rg<-range(a$lower,a$upper,ref);pad<-diff(rg)*.18;if(pad==0)pad<-.1;rg<-rg+c(-pad,pad)
  if(!prop && floor(rg[2])-ceiling(rg[1])<1)rg<-c(floor(rg[1]),ceiling(rg[2]))
@@ -80,9 +83,9 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  label<-if(isF)'F' else if(ischi)'χ²' else method
  peak_x<-max(125,min(435,X(xx[which.max(density)])))
  out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 %d" role="img" style="width:100%%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="%d" fill="white"/>',height,height),svg_text(280,22,paste0(if(ischi)'χ²' else method,' 分配',if(isF)paste0('（df₁=',df,'；df₂=',fmt(df2,1),'）') else if(is.finite(df))paste0('（df = ',df,'）') else ''),'#536c76',12),svg_text(peak_x,48,h0,'#183d47',14))
- out<-c(out,'<defs><marker id="area-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#1e40af" stroke="white" stroke-width="2" paint-order="stroke fill"/></marker></defs>')
- for(layer in 1:2){mask<-if(layer==1)extreme else rejection;run<-rle(mask);end<-cumsum(run$lengths);start<-end-run$lengths+1
- for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#bfdbfe' else '#1e40af'))}}
+ out<-c(out,'<defs><marker id="area-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#1e40af" stroke="white" stroke-width="2" paint-order="stroke fill"/></marker><pattern id="alpha-overlap" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7 L7 0" stroke="#1e40af" stroke-width="1.5"/></pattern></defs>')
+ for(layer in 1:3){mask<-if(layer==1)rejection else if(layer==2)extreme else rejection & extreme;run<-rle(mask);end<-cumsum(run$lengths);start<-end-run$lengths+1
+ for(i in which(run$values)){ids<-start[i]:end[i];points<-paste(sprintf('%.2f,%.2f',X(xx[ids]),Y(density[ids])),collapse=' ');out<-c(out,sprintf('<polygon points="%.2f,232 %s %.2f,232" fill="%s"/>',X(xx[ids[1]]),points,X(xx[ids[length(ids)]]),if(layer==1)'#1e40af' else if(layer==2)'#bfdbfe' else 'url(#alpha-overlap)'))}}
  out<-c(out,sprintf('<polyline points="%s" fill="none" stroke="#344b58" stroke-width="2"/><path d="M56 232 H510" stroke="#344b58"/>',paste(sprintf('%.2f,%.2f',X(xx),Y(density)),collapse=' ')))
  for(tick in pretty(c(lo,hi),n=6))if(tick>=lo&&tick<=hi)out<-c(out,sprintf('<path d="M%.2f 232 V237" stroke="#344b58"/>',X(tick)),svg_text(X(tick),254,format(tick,trim=TRUE),'#526b76',11))
  cvs<-if(tail=='two')c(-critical,critical) else if(tail=='left')-critical else critical
@@ -98,6 +101,13 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   target<-cv+side*.18
   label_x<-max(105,min(455,X(cv)+side*50))
   out<-c(out,svg_text(label_x,164,area_label,'#1e40af',12),area_arrow(label_x,172,X(target),232-(232-Y(pdf(target)))*.45))
+ }
+ p_sides<-if(tail=='two')c(-1,1) else if(tail=='left')-1 else 1
+ for(side in p_sides){
+  boundary<-if(tail=='two')side*abs(stat) else stat
+  target<-max(lo+.02,min(hi-.02,boundary+side*.15))
+  px<-max(100,min(460,X(boundary)+side*55))
+  out<-c(out,svg_text(px,193,paste0(if(tail=='two')'p/2 = ' else 'p = ',p_fmt(if(tail=='two')p/2 else p)),'#2563eb',12),area_arrow(px,201,X(target),232-(232-Y(pdf(target)))*.45))
  }
  for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,paste0(if(cv<0)'−' else '+',if(method=='t')'tcv' else 'zcv',' = ',fmt(cv)),'#cb7017',12))
  out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#7c3aed',12,if(stat<0)'start' else 'end'))
@@ -124,7 +134,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
    svg_text(X(0),417,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11),
    svg_text(280,443,'此雙側 CI 適用於雙尾比較，不適用於單尾比較情境。','#c32d3b',12))
  }
- out<-c(out,svg_text(280,height-12,'深藍：α 拒絕域　淺藍：p-value（重疊處顯示深藍）',size=11),'</svg>');paste(out,collapse='')
+ out<-c(out,svg_text(280,height-12,'深藍：α 拒絕域　淺藍：p-value（重疊處為深藍斜線）',size=11),'</svg>');paste(out,collapse='')
 }
 html_table <- function(a,reject=NULL) {
  heads<-paste0('<th>',esc(names(a)),'</th>',collapse='');rows<-vapply(seq_len(nrow(a)),function(i)paste0('<tr',if(!is.null(reject)&&reject[i])' class="reject"' else '', '>',paste0('<td>',esc(unlist(a[i,],use.names=FALSE)),'</td>',collapse=''),'</tr>'),character(1))

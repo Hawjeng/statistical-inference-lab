@@ -79,7 +79,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
      tags$summary(span('假設、檢定與結論'),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_result'),
      note('保留 H₀ 表示未能拒絕，不表示證明相等。'))),
    column(8,card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
-  conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('深藍：α 拒絕域；淺藍：p-value 尾端面積，重疊處顯示深藍。中央標示 1−α；箭頭標示各尾的 α 或 α/2。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
+  conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),note('深藍：α 拒絕域；淺藍：p-value 尾端面積，重疊處以深藍斜線標示拒絕域。中央標示 1−α；箭頭標示各尾的 α 或 α/2。紫色實線與文字：觀察檢定量及其 p-value；橘色虛線：臨界值。'))),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('R／Python 語法',
   card(h3('分析語法與結果'),
