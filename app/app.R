@@ -7,7 +7,8 @@ examples<-jsonlite::fromJSON('data/textbook.json',simplifyVector=FALSE)
 z_names<-unlist(d$zodiacNames)
 z_labels<-c('全體樣本',paste0(seq_along(z_names),'. ',z_names))
 choice_labels<-function(x)setNames(names(x),vapply(x,function(a)a$label,character(1)))
-example_choices<-setNames(vapply(examples,function(a)a$id,character(1)),vapply(examples,function(a)a$title,character(1)))
+demo_examples<-Filter(function(a)!a$id %in% c('Ch08p179pitcher','Ch08p183pitcher'),examples)
+example_choices<-setNames(vapply(demo_examples,function(a)a$id,character(1)),vapply(demo_examples,function(a)a$title,character(1)))
 code_choices<-list(
  '課本範例'=setNames(paste0('book:',example_choices),names(example_choices)),
  '星座調查・連續變數'=setNames(paste0('numeric:',names(d$numeric)),names(choice_labels(d$numeric))),
@@ -36,7 +37,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
  tabsetPanel(id='main_tab',selected='課本範例',
  tabPanel('原理說明',includeHTML('www/lesson.html')),
  tabPanel('課本範例',
-  card(h3('從課本的問題開始'),p('不依章次，以問題主題選擇範例；可下載 14 份對應 Excel 原檔。'),
+  card(h3('從課本的問題開始'),p('不依章次，以問題主題選擇範例；投手球速的兩種 95% CI 請見原理說明，並可下載對應 Excel 原檔。'),
    div(class='book-topic',selectInput('example','範例主題',example_choices)),
    div(style='display:none',textOutput('book_type'),textOutput('book_estimation'),textOutput('book_testing')),
    div(class='book-controls',
@@ -45,7 +46,7 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
     conditionalPanel("output.book_type == 'mean'",
      selectInput('bm','估計／檢定方式',c('z：σ 已知'='z','t：σ 未知'='t'))),
     conditionalPanel("output.book_type == 'mean' && input.bm == 'z'",
-     numericInput('bsigma','已知母體標準差 σ',10,min=.0001))),
+     numericInput('bsigma','已知母體標準差 σ',2,min=.0001))),
    conditionalPanel("output.book_estimation == 'yes'",checkboxInput('book_enable_test','延伸練習：自行指定 μ₀，啟用假設檢定',FALSE)),
    conditionalPanel("output.book_testing == 'yes'",div(class='book-controls',
     selectInput('bt','檢定方向',tails),
@@ -406,4 +407,3 @@ server<-function(input,output,session) {
 
 }
 shinyApp(ui,server)
-

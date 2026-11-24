@@ -1,5 +1,6 @@
 library(shiny)
 app<-source('app.R',encoding='UTF-8')$value
+stopifnot(!any(grepl('pitcher',example_choices)),example_choices[[1]]=='Ch08p179ex8.1')
 mock<-MockShinySession$new()
 csv_download<-NULL
 mock$sendCustomMessage<-function(type,message){
