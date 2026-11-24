@@ -91,7 +91,8 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  cvs<-if(tail=='two')c(-critical,critical) else if(tail=='left')-critical else critical
  # Label probability areas separately from the critical values on the axis.
  area_arrow<-function(x1,y1,x2,y2)sprintf('<path d="M%.2f %.2f L%.2f %.2f" fill="none" stroke="#1e40af" stroke-width="1.3" marker-end="url(#area-arrow)"/>',x1,y1,x2,y2)
- p_area_arrow<-function(...){a<-gsub('#1e40af','#c97908',area_arrow(...),fixed=TRUE);gsub('#area-arrow','#p-area-arrow',a,fixed=TRUE)}
+ p_area_arrow<-function(...){a<-gsub('#1e40af','#c97908',area_arrow(...),fixed=TRUE);a<-gsub('#area-arrow','#p-area-arrow',a,fixed=TRUE);halo<-sub('marker-end="[^"]+"','',a);halo<-gsub('#c97908','white',halo,fixed=TRUE);halo<-gsub('stroke-width="1.3"','stroke-width="4"',halo,fixed=TRUE);paste0(halo,a)}
+ prob_text<-function(...)sub('<text ','<text stroke="white" stroke-width="2" paint-order="stroke" ',svg_text(...),fixed=TRUE)
  middle<-if(tail=='two')0 else if(tail=='left')critical/3 else if(positive)critical/2 else -critical/3
  middle_x<-max(165,min(395,X(middle)))
  out<-c(out,svg_text(middle_x,133,paste0('1−α = ',fmt(1-alpha,3)),'#1e40af',13))
@@ -108,7 +109,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   boundary<-if(tail=='two')side*abs(stat) else stat
   target<-max(lo+.02,min(hi-.02,boundary+side*.15))
   px<-max(100,min(460,X(boundary)+side*55))
-  out<-c(out,svg_text(px,193,paste0(if(tail=='two')'p/2 = ' else 'p = ',p_fmt(if(tail=='two')p/2 else p)),'#c97908',12),p_area_arrow(px,201,X(target),232-(232-Y(pdf(target)))*.45))
+  out<-c(out,prob_text(px,193,paste0(if(tail=='two')'p/2 = ' else 'p = ',p_fmt(if(tail=='two')p/2 else p)),'#c97908',12),p_area_arrow(px,201,X(target),232-(232-Y(pdf(target)))*.45))
  }
  for(cv in cvs)out<-c(out,sprintf('<path d="M%.2f 70 V232" stroke="#cb7017" stroke-width="1.5" stroke-dasharray="5 4"/>',X(cv)),svg_text(X(cv),64,paste0(if(cv<0)'−' else '+',if(method=='t')'tcv' else 'zcv',' = ',fmt(cv)),'#cb7017',12))
  out<-c(out,svg_text(X(stat)+if(stat<0)6 else -6,103,paste0(method,'_obt = ',fmt(stat)),'#dc2626',12,if(stat<0)'start' else 'end'))
