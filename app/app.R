@@ -33,7 +33,7 @@ result_table<-function(a) {
   假設檢定標準誤=fmt(a$se,4),
   `觀察檢定量（z_obt／t_obt）`=fmt(a$stat,4),df=ifelse(is.na(a$df),'—',a$df),臨界值=fmt(a$critical,4),p值=ifelse(is.na(a$p),'—',p_fmt(a$p)),結論=ifelse(is.na(a$reject),'—',ifelse(a$reject,'拒絕 H₀','保留 H₀')),check.names=FALSE)
 }
-ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css?v=ci-beside-calculation'),tags$script(src='downloads.js'),
+ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統計互動教材'),tags$link(rel='stylesheet',href='style.css?v=aligned-ci-and-tests'),tags$script(src='downloads.js'),
  tags$script(HTML("function reportHeight(){parent.postMessage({type:'inference-height',height:document.documentElement.scrollHeight},location.origin)};new ResizeObserver(reportHeight).observe(document.documentElement);setInterval(reportHeight,1500);"))),
  tags$head(tags$link(rel='stylesheet',href='https://hawjeng.github.io/assets/lab-return.css')),
  div(class='app-top',a(href='https://hawjeng.github.io/resources.html#statistics-apps',class='lab-return','← 返回教學與專案'),a(href='https://github.com/Hawjeng/statistical-inference-lab',target='_blank','GitHub 原始碼 ↗')),
@@ -79,13 +79,12 @@ ui<-fluidPage(tags$head(tags$title('區間估計與假設檢定｜邱皓政統�
   div(class='survey-workspace',
    div(class='survey-calculations',
     tags$details(class='lab-card survey-details',open=NA,
-     tags$summary(textOutput('survey_ci_title',inline=TRUE),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_ci_steps')),
-    tags$details(class='lab-card survey-details',open=NA,
-     tags$summary(span('假設、檢定與結論'),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_result'),
-     note('保留 H₀ 表示未能拒絕，不表示證明相等。'))),
+     tags$summary(textOutput('survey_ci_title',inline=TRUE),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_ci_steps'))),
    div(class='survey-visuals',
-  card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')),
-    conditionalPanel("input.zodiac != '0'",card(h3('檢定示意圖'),uiOutput('survey_diagram'),class='survey-diagrams')))),
+card(h3('資料圖與雙側信賴區間'),checkboxInput('show_all_groups','展開其他資料',FALSE),uiOutput('chart_legend'),div(class='ci-scroll',uiOutput('survey_chart')),tags$button(type='button',class='btn btn-default',onclick="downloadCurrentSVG()",'下載圖形 SVG')))),
+  tags$details(class='lab-card survey-details',open=NA,
+   tags$summary(span('假設、檢定與結論'),span(class='survey-toggle',`aria-hidden`='true')),uiOutput('survey_result'),
+   note('保留 H₀ 表示未能拒絕，不表示證明相等。')),
   card(h3('完整計算表'),tags$details(tags$summary('展開／收合完整計算與檢定'),uiOutput('survey_table')),actionButton('save_csv','下載目前結果 CSV'))),
  tabPanel('R／Python 語法',
   card(h3('分析語法與結果'),
@@ -312,9 +311,13 @@ server<-function(input,output,session) {
       p(paste0('p = ',probability,if(r$p<.0001)' ' else ' = ',p_fmt(r$p))),
       p(paste0('p ',if(r$reject)'<' else '≥',' α = ',fmt(alpha(),3))))
     }else p('假設檢定標準誤 = ',fmt(r$se,4),'；',statistic,' = ',fmt(r$stat,4),'；p = ',p_fmt(r$p))
-    div(class='result-block',h4(paste0(statistic,'（',r$method,'-statistic）')),
-     steps,
-     div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'),decision_note(r$reject,input$tail,if(input$kind=='category')'母體比例' else '母體平均數'))
+    div(class='survey-test-row result-block',
+     div(class='survey-test-calculation',
+      h4(paste0(statistic,'（',r$method,'-statistic）')),steps,
+      div(class=if(r$reject)'decision reject' else 'decision',if(r$reject)'拒絕 H₀' else '保留 H₀'),
+      decision_note(r$reject,input$tail,if(input$kind=='category')'母體比例' else '母體平均數')),
+     div(class='survey-test-figure',h4(paste0(r$method,'-test')),
+      diagram_ui(r,alpha(),input$tail,r$method,h0=null_label(input$tail,r$mu,if(input$kind=='category')'π' else 'μ'))))
    }),
    if(input$kind=='category'&&any(!a$approxOK))p(class='warning','n·p₀ 或 n·(1−p₀) < 5，比例 z 常態近似可能不適合。')
   )

@@ -18,3 +18,8 @@ body{font-family:"Microsoft JhengHei","PingFang TC",Arial,sans-serif;color:#183d
 .survey-diagrams .test-panel h4{margin:0 0 8px}
 .survey-diagrams .test-panel+.test-panel{border-top:1px solid #d7e4e8;padding-top:18px}
 @media(max-width:767px){.survey-workspace{flex-direction:column;gap:0}.survey-calculations,.survey-visuals{width:100%;flex-basis:auto}}
+
+.survey-test-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start;padding-top:16px;margin-top:20px}
+.survey-test-row h4{margin-top:0}
+.survey-test-calculation,.survey-test-figure{min-width:0}
+@media(max-width:767px){.survey-test-row{grid-template-columns:minmax(0,1fr)}}
