@@ -80,7 +80,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
  rejection<-if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical
  extreme<-if(tail=='two')abs(xx)>=abs(stat) else if(tail=='left')xx<=stat else xx>=stat
- label<-if(isF)'F' else if(ischi)'χ²' else method
+ label<-if(isF)'F' else if(ischi)'χ²' else if(method=='t')paste0('t(',format(round(df,2),trim=TRUE),')') else method
  peak_x<-max(125,min(435,X(xx[which.max(density)])))
  out<-c(sprintf('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 %d" role="img" style="width:100%%;font-family:Microsoft JhengHei,Arial,sans-serif"><rect width="560" height="%d" fill="white"/>',height,height),svg_text(peak_x,48,h0,'#183d47',14))
  out<-c(out,'<defs><marker id="area-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 Z" fill="#1e40af" stroke="white" stroke-width="2" paint-order="stroke fill"/></marker><pattern id="alpha-overlap" width="7" height="7" patternUnits="userSpaceOnUse"><path d="M0 7 L7 0" stroke="#1e40af" stroke-width="1.5"/></pattern></defs>')
