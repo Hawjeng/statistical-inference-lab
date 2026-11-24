@@ -19,6 +19,8 @@ jobs:
         with:
           r-version: 'release'
           use-public-rspm: true
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
       - name: Install export tools
         run: Rscript -e 'install.packages(c("shinylive", "shiny", "jsonlite"))'
       - name: Export Shinylive

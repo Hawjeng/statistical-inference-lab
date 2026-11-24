@@ -72,7 +72,7 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
   ci_positions<-(c(ci$lower,ci$upper)-ci$mu)/ci$se
   hi<-max(hi,abs(ci_positions)+.8)
   lo<--hi
-  height<-449
+  height<-477
  }
  xx<-seq(lo,hi,length.out=1001);density<-pdf(if(positive)pmax(xx,.001) else xx);ymax<-max(density[is.finite(density)]);X<-function(x)56+454*(x-lo)/(hi-lo);Y<-function(y)232-155*y/ymax
  rejection<-if(tail=='two')abs(xx)>=critical else if(tail=='left')xx<= -critical else xx>=critical
@@ -120,7 +120,8 @@ distribution_svg <- function(stat,critical,df=NA,tail='two',alpha=.05,p=.05,meth
    svg_text(X(stat),362,paste0(if(is_proportion)'p̂ = ' else 'x̄ = ',raw_values[2]),'#7c3aed',12),
    svg_text(lower_x-6,394,raw_values[1],ci_color,12,'end'),
    svg_text(upper_x+6,394,raw_values[3],ci_color,12,'start'),
-   svg_text(X(0),417,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11))
+   svg_text(X(0),417,if(is_proportion)'0（p₀）' else '0（μ₀）','#526b76',11),
+   svg_text(280,443,'此雙側 CI 適用於雙尾比較，不適用於單尾比較情境。','#c32d3b',12))
  }
  out<-c(out,svg_text(280,height-12,'深藍：α 拒絕域　淺藍：p-value（重疊處顯示深藍）',size=11),'</svg>');paste(out,collapse='')
 }

@@ -19,6 +19,7 @@ testServer(app,session=mock,{
  ci0<-a[,c('lower','upper')];session$setInputs(tail='left');session$flushReact();stopifnot(identical(ci0,results()[,c('lower','upper')]))
  stopifnot(grepl('H₀：μ ≥',output$survey_diagram$html,fixed=TRUE),grepl('z-test',output$survey_diagram$html,fixed=TRUE),grepl('t-test',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(tail='right');session$flushReact();stopifnot(grepl('H₀：μ ≤',output$survey_diagram$html,fixed=TRUE))
+ stopifnot(grepl('此雙側 CI 適用於雙尾比較，不適用於單尾比較情境。',output$survey_diagram$html,fixed=TRUE))
  session$setInputs(survey_mu_B5=d$numeric$B5$mu+1,survey_sigma_B5=2*d$numeric$B5$sigma)
  custom<-selected_results()
  stopifnot(all(custom$mu==a$mu[1]+1),isTRUE(all.equal(custom$ci_se,c(2*a$ci_se[1],a$ci_se[2]))),
